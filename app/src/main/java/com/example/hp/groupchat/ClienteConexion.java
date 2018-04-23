@@ -76,7 +76,7 @@ public class ClienteConexion extends AsyncTask<String, String, String> {
         System.out.println("Sending...");
 
         DataOutputStream dos = new DataOutputStream(os);
-        dos.writeUTF("File_Transfer " + myFile.getName());
+        dos.writeUTF(KeyWordSystem.File_Transfer+" " + myFile.getName());
         dos.writeLong(mybytearray.length);
         dos.write(mybytearray, 0, mybytearray.length);
         dos.flush();
