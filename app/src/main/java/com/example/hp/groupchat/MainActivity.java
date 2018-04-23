@@ -76,7 +76,7 @@ public class MainActivity extends Activity {
         adaptador1 = new Adaptador(this, men);
         final ListView opc = (ListView) findViewById(R.id.opc);
         opc.setAdapter(adaptador1);
-        conexion = new ClienteConexion("192.168.0.21", 10001, main);
+        conexion = new ClienteConexion("10.42.0.1", 10001, main);
         conexion.execute(nombre);
 
         enviar.setOnClickListener(new View.OnClickListener() {
