@@ -35,10 +35,7 @@ public class ClienteRecepcion extends AsyncTask<String, String, String> {
     protected void onProgressUpdate(String... values) {
 
         MainActivity.Mensaje mensaje=new MainActivity.Mensaje("Nombre", values[0], 'R');
-        if (values[0].contains(KeyWordSystem.File_Transfer)){
-            Bitmap bitmap = BitmapFactory.decodeByteArray(bitmapdata, 0, bitmapdata.length);
-            mensaje.setBitmap(bitmap);
-        }
+
         main.men.add(mensaje);
         main.adaptador1.notifyDataSetChanged();
     }
@@ -64,7 +61,9 @@ public class ClienteRecepcion extends AsyncTask<String, String, String> {
                 Log.e("MSG", string);
                 if (string.contains(KeyWordSystem.File_Transfer)) {
                     bitmapdata = readBytes();
+                    Bitmap bitmap = BitmapFactory.decodeByteArray(bitmapdata, 0, bitmapdata.length);
 
+                    saveImageToGallery(bitmap,string.split(" ")[1]);
                     publishProgress(string);
                 } else {
                     publishProgress(string);
@@ -91,7 +90,7 @@ public class ClienteRecepcion extends AsyncTask<String, String, String> {
 
         output.close();
         Log.d(KeyWordSystem.File_Transfer, "Ok");
-        saveImageToGallery(file);
+        //saveImageToGallery(file);
         publishProgress(nameFile);
     }
     private byte[] readBytes() throws IOException {
@@ -107,14 +106,13 @@ public class ClienteRecepcion extends AsyncTask<String, String, String> {
         return data;
     }
 
-    private void saveImageToGallery(File file) {
+    private void saveImageToGallery(Bitmap b,String name) {
 
-        Bitmap b = BitmapFactory.decodeFile(file.getAbsolutePath());
-        String baseName = StringUtils.getBaseName(file.getName());
+
 
         String description = "Image from server.";
         Date currentDate = new Date(System.currentTimeMillis() + 25L * 24L * 60L * 60L * 1000L);
-        MediaStore.Images.Media.insertImage(main.getContentResolver(), b, baseName + "-" + currentDate.toString(), description);
+        MediaStore.Images.Media.insertImage(main.getContentResolver(), b, name + "-" + currentDate.toString(), description);
         Log.e("SaveImageInGallery", "Done!");
     }
 
