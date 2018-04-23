@@ -6,11 +6,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Debug;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
+import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -82,7 +85,7 @@ public class MainActivity extends Activity {
                 men.add(new Mensaje(nombre, mensaje.getText().toString(), 'E'));
                 adaptador1.notifyDataSetChanged();
                 bq.add(nombre + ":" + mensaje.getText().toString());
-                mensaje.setText("");
+                mensaje.getText().clear();
 
             }
         });
@@ -93,17 +96,16 @@ public class MainActivity extends Activity {
         String type = intent.getType();
 
         if (Intent.ACTION_SEND.equals(action) && type != null) {
-            if (type.startsWith("image/")) {
+            if (type.contains("image/png")) {
                 handleSendImage(intent); // Handle single image being sent
             }
         }
     }
 
 
-
     public void chooseImg(View view) {
         Intent intent = new Intent();
-        intent.setType("image/*");
+        intent.setType("image/png");
         intent.setAction(Intent.ACTION_GET_CONTENT);
         startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE);
     }
@@ -112,27 +114,43 @@ public class MainActivity extends Activity {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
 
         if (resultCode == Activity.RESULT_OK && requestCode == PICK_IMAGE) {
+
+
             if (data.getData() != null) {
+                Uri imageUri = data.getData();// = conexion.getRealPathFromURI(data.getData());
+
+                Mensaje msj = new Mensaje(nombre, imageUri.getPath(), 'E');
+
+                Uri selectedImage = data.getData();
                 try {
-                    conexion.onSendFile(data.getData());
-                } catch (IOException e) {
+                    Bitmap bitmapImage = decodeBitmap(selectedImage);
+                    msj.setBitmap(bitmapImage);
+                    msj.setUriImg(imageUri);
+                    msj.setHasImg(true);
+                } catch (FileNotFoundException e) {
                     e.printStackTrace();
                 }
+
+                men.add(msj);
+                adaptador1.notifyDataSetChanged();
+                bq.add(KeyWordSystem.File_Transfer + " " + (men.size() - 1));
             } else {
                 //showing toast when unable to capture the image
                 Toast.makeText(main, "Unable to upload Image Please Try again ...", Toast.LENGTH_SHORT).show();
             }
         }
     }
+
     public void handleSendImage(Intent intent) {
         Uri imageUri = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
         if (imageUri != null) {
-            try {
-                conexion.onSendFile(imageUri);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            Mensaje msj = new Mensaje(nombre, imageUri.getPath(), 'E');
+            //msj.setImageUri(imageUri);
+            men.add(msj);
+            adaptador1.notifyDataSetChanged();
+
         }
+
     }
 
 
@@ -157,9 +175,35 @@ public class MainActivity extends Activity {
         }
     }
 
+    public Bitmap decodeBitmap(Uri selectedImage) throws FileNotFoundException {
+        BitmapFactory.Options o = new BitmapFactory.Options();
+        o.inJustDecodeBounds = true;
+        BitmapFactory.decodeStream(getContentResolver().openInputStream(selectedImage), null, o);
+
+        final int REQUIRED_SIZE = 100;
+
+        int width_tmp = o.outWidth, height_tmp = o.outHeight;
+        int scale = 1;
+        while (true) {
+            if (width_tmp / 2 < REQUIRED_SIZE || height_tmp / 2 < REQUIRED_SIZE) {
+                break;
+            }
+            width_tmp /= 2;
+            height_tmp /= 2;
+            scale *= 2;
+        }
+
+        BitmapFactory.Options o2 = new BitmapFactory.Options();
+        o2.inSampleSize = scale;
+        return BitmapFactory.decodeStream(getContentResolver().openInputStream(selectedImage), null, o2);
+    }
+
     public static class Mensaje {
-        String nombre,
-                mensaje;
+        String nombre;
+        String mensaje;
+        Bitmap bitmap;
+        Uri uriImg;
+        boolean hasImg;
         char posicion;
 
 
@@ -167,6 +211,7 @@ public class MainActivity extends Activity {
             this.nombre = nombre;
             this.mensaje = mensaje;
             this.posicion = posicion;
+            this.hasImg = false;
         }
 
         public String getNombre() {
@@ -179,6 +224,30 @@ public class MainActivity extends Activity {
 
         public char getPosicion() {
             return posicion;
+        }
+
+        public boolean isHasImg() {
+            return hasImg;
+        }
+
+        public void setHasImg(boolean hasImg) {
+            this.hasImg = hasImg;
+        }
+
+        public Bitmap getBitmap() {
+            return bitmap;
+        }
+
+        public void setBitmap(Bitmap bitmap) {
+            this.bitmap = bitmap;
+        }
+
+        public void setUriImg(Uri uriImg) {
+            this.uriImg = uriImg;
+        }
+
+        public Uri getUriImg() {
+            return uriImg;
         }
     }
 
@@ -198,11 +267,26 @@ public class MainActivity extends Activity {
                 recibido.setVisibility(View.GONE);
                 TextView env = (TextView) item.findViewById(R.id.textViewEnvio);
                 env.setText(datos.get(position).getMensaje());
+                if (datos.get(position).getBitmap() != null) {
+                    ImageView imageView = item.findViewById(R.id.imageViewOther);
+                    imageView.setImageBitmap(datos.get(position).getBitmap());
+                }
             } else {
                 LinearLayout recibido = (LinearLayout) item.findViewById(R.id.layoutEnvio);
                 recibido.setVisibility(View.GONE);
                 TextView env = (TextView) item.findViewById(R.id.textViewRecibido);
                 env.setText(datos.get(position).getMensaje());
+                if (datos.get(position).isHasImg()) {
+                    ImageView imageView = item.findViewById(R.id.imageOfUser);
+                    Uri selectedImage = datos.get(position).getUriImg();
+                    try {
+                        Bitmap bitmapImage = decodeBitmap(selectedImage);
+                        imageView.setImageBitmap(bitmapImage);
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
+
+                }
             }
             return (item);
 

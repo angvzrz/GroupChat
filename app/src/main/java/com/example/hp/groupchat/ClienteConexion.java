@@ -63,28 +63,7 @@ public class ClienteConexion extends AsyncTask<String, String, String> {
     }
 
 
-    public void onSendFile(Uri selectedImagePath) throws IOException {
-        System.out.println("Connecting...");
 
-        File myFile = new File(getRealPathFromURI(selectedImagePath));
-        byte[] mybytearray = new byte[(int) myFile.length()];
-        FileInputStream fis = new FileInputStream(myFile);
-        BufferedInputStream bis = new BufferedInputStream(fis);
-        bis.read(mybytearray, 0, mybytearray.length);
-        OutputStream os = clientSocket.getOutputStream();
-
-        System.out.println("Sending...");
-
-        DataOutputStream dos = new DataOutputStream(os);
-        dos.writeUTF(KeyWordSystem.File_Transfer+" " + myFile.getName());
-        dos.writeLong(mybytearray.length);
-        dos.write(mybytearray, 0, mybytearray.length);
-        dos.flush();
-
-        bis.close();
-
-
-    }
 
     public String getRealPathFromURI(Uri contentUri) {
         String res = null;
