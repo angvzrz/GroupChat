@@ -27,6 +27,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.hp.groupchat.Connection.ClientConnection;
+
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -41,14 +43,14 @@ import java.util.ArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class MainActivity extends Activity {
-    LinkedBlockingQueue<String> bq;
-    ArrayList<Mensaje> men;
-    Adaptador adaptador1;
-    String nombre;
-    ImageButton enviar;
-    EditText mensaje;
-    ClienteConexion conexion;
-    MainActivity main;
+    private LinkedBlockingQueue<String> bq;
+    private ArrayList<Mensaje> men;
+    private Adaptador adaptador1;
+    private String nombre;
+    private ImageButton enviar;
+    private EditText mensaje;
+    private ClientConnection clientConnection;
+    private MainActivity main;
 
     public static final int PICK_IMAGE = 1821312;
     // Storage Permissions
@@ -68,21 +70,21 @@ public class MainActivity extends Activity {
         men = new ArrayList<>();
         main = this;
         bq = new LinkedBlockingQueue();
-        men.add(new Mensaje("Diego", "Este es un mensaje", 'E'));
+        men.add(new Mensaje( "Este es un mensaje", 'E'));
         nombre = "Alejandro";
-        men.add(new Mensaje("Diego", "Este es un mensaje", 'R'));
+        men.add(new Mensaje( "Este es un mensaje", 'R'));
 
 
         adaptador1 = new Adaptador(this, men);
         final ListView opc = (ListView) findViewById(R.id.opc);
         opc.setAdapter(adaptador1);
-        conexion = new ClienteConexion("10.42.0.1", 10001, main);
-        conexion.execute(nombre);
+        clientConnection = new ClientConnection("10.42.0.1", 10001, main);
+        clientConnection.execute(nombre);
 
         enviar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                men.add(new Mensaje(nombre, mensaje.getText().toString(), 'E'));
+                men.add(new Mensaje( mensaje.getText().toString(), 'E'));
                 adaptador1.notifyDataSetChanged();
                 bq.add(nombre + ":" + mensaje.getText().toString());
                 mensaje.getText().clear();
@@ -119,7 +121,7 @@ public class MainActivity extends Activity {
             if (data.getData() != null) {
                 Uri imageUri = data.getData();// = conexion.getRealPathFromURI(data.getData());
 
-                Mensaje msj = new Mensaje(nombre, imageUri.getPath(), 'E');
+                Mensaje msj = new Mensaje( imageUri.getPath(), 'E');
 
                 Uri selectedImage = data.getData();
                 try {
@@ -141,10 +143,16 @@ public class MainActivity extends Activity {
         }
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        //bq.add(KeyWordSystem.Close_Connection);
+    }
+
     public void handleSendImage(Intent intent) {
         Uri imageUri = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
         if (imageUri != null) {
-            Mensaje msj = new Mensaje(nombre, imageUri.getPath(), 'E');
+            Mensaje msj = new Mensaje( imageUri.getPath(), 'E');
             //msj.setImageUri(imageUri);
             men.add(msj);
             adaptador1.notifyDataSetChanged();
@@ -199,31 +207,25 @@ public class MainActivity extends Activity {
     }
 
     public static class Mensaje {
-        String nombre;
-        String mensaje;
+
+        String text;
         Bitmap bitmap;
         Uri uriImg;
         boolean hasImg;
-        char posicion;
+        char pos;
 
 
-        public Mensaje(String nombre, String mensaje, char posicion) {
-            this.nombre = nombre;
-            this.mensaje = mensaje;
-            this.posicion = posicion;
+        public Mensaje( String text, char pos) {
+            this.text = text;
             this.hasImg = false;
         }
 
-        public String getNombre() {
-            return nombre;
+        public char getPos() {
+            return pos;
         }
 
-        public String getMensaje() {
-            return mensaje;
-        }
-
-        public char getPosicion() {
-            return posicion;
+        public String getText() {
+            return text;
         }
 
         public boolean isHasImg() {
@@ -262,34 +264,46 @@ public class MainActivity extends Activity {
         public View getView(final int position, View convertView, ViewGroup parent) {
             LayoutInflater inflater = LayoutInflater.from(getContext());
             View item = inflater.inflate(R.layout.list, null);
-            if (datos.get(position).getPosicion() == 'E') {
+            if (datos.get(position).getPos() == 'E') {
                 LinearLayout recibido = (LinearLayout) item.findViewById(R.id.layoutRecibo);
                 recibido.setVisibility(View.GONE);
                 TextView env = (TextView) item.findViewById(R.id.textViewEnvio);
-                env.setText(datos.get(position).getMensaje());
-                if (datos.get(position).getBitmap() != null) {
-                    ImageView imageView = item.findViewById(R.id.imageViewOther);
-                    imageView.setImageBitmap(datos.get(position).getBitmap());
-                }
+                env.setText(datos.get(position).getText());
+
             } else {
                 LinearLayout recibido = (LinearLayout) item.findViewById(R.id.layoutEnvio);
                 recibido.setVisibility(View.GONE);
                 TextView env = (TextView) item.findViewById(R.id.textViewRecibido);
-                env.setText(datos.get(position).getMensaje());
-                if (datos.get(position).isHasImg()) {
-                    ImageView imageView = item.findViewById(R.id.imageOfUser);
-                    Uri selectedImage = datos.get(position).getUriImg();
-                    try {
-                        Bitmap bitmapImage = decodeBitmap(selectedImage);
-                        imageView.setImageBitmap(bitmapImage);
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
-                    }
+                env.setText(datos.get(position).getText());
 
-                }
             }
             return (item);
 
         }
+    }
+
+    public Adaptador getAdaptador1() {
+        return adaptador1;
+    }
+
+    public void addNewMsg(Mensaje mensaje) {
+        men.add(mensaje);
+        main.getAdaptador1().notifyDataSetChanged();
+    }
+
+    public LinkedBlockingQueue<String> getBq() {
+        return bq;
+    }
+
+    public MainActivity getMain() {
+        return main;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public ArrayList<Mensaje> getMen() {
+        return men;
     }
 }
