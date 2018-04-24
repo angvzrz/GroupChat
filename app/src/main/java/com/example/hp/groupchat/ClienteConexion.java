@@ -34,10 +34,17 @@ public class ClienteConexion extends AsyncTask<String, String, String> {
         this.main = main;
 
     }
+    @Override
+    protected void onProgressUpdate(String... values) {
 
+        MainActivity.Mensaje mensaje=new MainActivity.Mensaje("", values[0], 'R');
+
+        main.men.add(mensaje);
+        main.adaptador1.notifyDataSetChanged();
+    }
     @Override
     protected String doInBackground(String... params) {
-        String conexion;
+        String conexion = "";
         try {
             clientSocket = new Socket(HOST, PUERTO);
             DataOutputStream os = new DataOutputStream(clientSocket.getOutputStream());
@@ -45,12 +52,12 @@ public class ClienteConexion extends AsyncTask<String, String, String> {
 
             os.writeUTF(params[0]);
             conexion = is.readUTF();
-            Log.d("Seerrviodr", conexion);
+            publishProgress(conexion);
 
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return null;
+       return conexion;
     }
 
     @Override
