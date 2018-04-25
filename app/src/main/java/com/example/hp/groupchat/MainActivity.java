@@ -5,47 +5,34 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Debug;
-import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
-import android.util.Base64;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.hp.groupchat.Connection.ClientConnection;
+import com.example.hp.groupchat.shared.KeyWordSystem;
+import com.example.hp.groupchat.shared.PackData;
 
-import java.io.BufferedInputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.net.Socket;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class MainActivity extends Activity {
-    private LinkedBlockingQueue<String> bq;
-    private ArrayList<Mensaje> men;
-    private Adaptador adaptador1;
+    private LinkedBlockingQueue<PackData> bq;
+    private ArrayList<PackData> men;
+    private PackAdapter packAdapter;
     private String nombre;
     private ImageButton enviar;
     private EditText mensaje;
@@ -70,23 +57,29 @@ public class MainActivity extends Activity {
         men = new ArrayList<>();
         main = this;
         bq = new LinkedBlockingQueue();
-        men.add(new Mensaje( "Este es un mensaje", 'E'));
-        nombre = "Alejandro";
-        men.add(new Mensaje( "Este es un mensaje", 'R'));
+
+        nombre = "User-" + System.currentTimeMillis();
+        PackData packData = new PackData(nombre, KeyWordSystem.Only_Text, "Este es un mensaje");
+        packData.setPos('E');
+        men.add(packData);
+
+        men.add(new PackData(nombre, KeyWordSystem.Only_Text, "Este es un mensaje"));
 
 
-        adaptador1 = new Adaptador(this, men);
+        packAdapter = new PackAdapter(this, men);
         final ListView opc = (ListView) findViewById(R.id.opc);
-        opc.setAdapter(adaptador1);
-        clientConnection = new ClientConnection("10.42.0.1", 10001, main);
-        clientConnection.execute(nombre);
+        opc.setAdapter(packAdapter);
+        clientConnection = new ClientConnection("192.168.0.21", 3074, this);
+        clientConnection.execute(new PackData(nombre, KeyWordSystem.Connected, nombre));
 
         enviar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                men.add(new Mensaje( mensaje.getText().toString(), 'E'));
-                adaptador1.notifyDataSetChanged();
-                bq.add(nombre + ":" + mensaje.getText().toString());
+                PackData packData = new PackData(nombre, KeyWordSystem.Only_Text, mensaje.getText().toString());
+                packData.setPos('E');
+                men.add(packData);
+                packAdapter.notifyDataSetChanged();
+                bq.add(packData);
                 mensaje.getText().clear();
 
             }
@@ -121,10 +114,10 @@ public class MainActivity extends Activity {
             if (data.getData() != null) {
                 Uri imageUri = data.getData();// = conexion.getRealPathFromURI(data.getData());
 
-                Mensaje msj = new Mensaje( imageUri.getPath(), 'E');
+                PackData msj = new PackData(nombre, KeyWordSystem.File_Transfer, imageUri.getPath());
 
                 Uri selectedImage = data.getData();
-                try {
+               /* try {
                     Bitmap bitmapImage = decodeBitmap(selectedImage);
                     msj.setBitmap(bitmapImage);
                     msj.setUriImg(imageUri);
@@ -135,7 +128,7 @@ public class MainActivity extends Activity {
 
                 men.add(msj);
                 adaptador1.notifyDataSetChanged();
-                bq.add(KeyWordSystem.File_Transfer + " " + (men.size() - 1));
+                bq.add(KeyWordSystem.File_Transfer + " " + (men.size() - 1));*/
             } else {
                 //showing toast when unable to capture the image
                 Toast.makeText(main, "Unable to upload Image Please Try again ...", Toast.LENGTH_SHORT).show();
@@ -152,10 +145,11 @@ public class MainActivity extends Activity {
     public void handleSendImage(Intent intent) {
         Uri imageUri = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
         if (imageUri != null) {
-            Mensaje msj = new Mensaje( imageUri.getPath(), 'E');
+            PackData msj = new PackData(nombre, KeyWordSystem.File_Transfer, imageUri.getPath());
+            msj.setPos('E');
             //msj.setImageUri(imageUri);
             men.add(msj);
-            adaptador1.notifyDataSetChanged();
+            packAdapter.notifyDataSetChanged();
 
         }
 
@@ -206,92 +200,51 @@ public class MainActivity extends Activity {
         return BitmapFactory.decodeStream(getContentResolver().openInputStream(selectedImage), null, o2);
     }
 
-    public static class Mensaje {
 
-        String text;
-        Bitmap bitmap;
-        Uri uriImg;
-        boolean hasImg;
-        char pos;
+    class PackAdapter extends ArrayAdapter<PackData> {
+        ArrayList<PackData> data;
 
-
-        public Mensaje( String text, char pos) {
-            this.text = text;
-            this.hasImg = false;
-        }
-
-        public char getPos() {
-            return pos;
-        }
-
-        public String getText() {
-            return text;
-        }
-
-        public boolean isHasImg() {
-            return hasImg;
-        }
-
-        public void setHasImg(boolean hasImg) {
-            this.hasImg = hasImg;
-        }
-
-        public Bitmap getBitmap() {
-            return bitmap;
-        }
-
-        public void setBitmap(Bitmap bitmap) {
-            this.bitmap = bitmap;
-        }
-
-        public void setUriImg(Uri uriImg) {
-            this.uriImg = uriImg;
-        }
-
-        public Uri getUriImg() {
-            return uriImg;
-        }
-    }
-
-    class Adaptador extends ArrayAdapter<Mensaje> {
-        ArrayList<Mensaje> datos;
-
-        public Adaptador(Context context, ArrayList<Mensaje> datos) {
-            super(context, R.layout.list, datos);
-            this.datos = datos;
+        public PackAdapter(Context context, ArrayList<PackData> data) {
+            super(context, R.layout.list, data);
+            this.data = data;
         }
 
         public View getView(final int position, View convertView, ViewGroup parent) {
             LayoutInflater inflater = LayoutInflater.from(getContext());
             View item = inflater.inflate(R.layout.list, null);
-            if (datos.get(position).getPos() == 'E') {
+            if (data.get(position).getPos() == 'E') {
                 LinearLayout recibido = (LinearLayout) item.findViewById(R.id.layoutRecibo);
                 recibido.setVisibility(View.GONE);
                 TextView env = (TextView) item.findViewById(R.id.textViewEnvio);
-                env.setText(datos.get(position).getText());
+                PackData msg=data.get(position);
+                String txt = msg.getTime() + " - " + msg.getFrom() + ": " + msg.getText();
+                env.setText(txt);
 
             } else {
                 LinearLayout recibido = (LinearLayout) item.findViewById(R.id.layoutEnvio);
                 recibido.setVisibility(View.GONE);
                 TextView env = (TextView) item.findViewById(R.id.textViewRecibido);
-                env.setText(datos.get(position).getText());
+                PackData msg=data.get(position);
+                String txt = msg.getTime() + " - " + msg.getFrom() + ": " + msg.getText();
+                env.setText(txt);
 
             }
             return (item);
 
         }
+
     }
 
-    public Adaptador getAdaptador1() {
-        return adaptador1;
+    public PackAdapter getPackAdapter() {
+        return packAdapter;
     }
 
-    public void addNewMsg(Mensaje mensaje) {
+    public void addNewMsg(PackData mensaje) {
         men.add(mensaje);
-        main.getAdaptador1().notifyDataSetChanged();
+        packAdapter.notifyDataSetChanged();
     }
 
-    public LinkedBlockingQueue<String> getBq() {
+    public LinkedBlockingQueue<PackData> getBq() {
         return bq;
     }
 
@@ -303,7 +256,7 @@ public class MainActivity extends Activity {
         return nombre;
     }
 
-    public ArrayList<Mensaje> getMen() {
+    public ArrayList<PackData> getMen() {
         return men;
     }
 }

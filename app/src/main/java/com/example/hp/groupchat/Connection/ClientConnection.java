@@ -6,20 +6,22 @@ import android.os.AsyncTask;
 import android.provider.MediaStore;
 import android.util.Log;
 
-import com.example.hp.groupchat.ClienteEnvio;
-import com.example.hp.groupchat.ClienteRecepcion;
 import com.example.hp.groupchat.MainActivity;
+import com.example.hp.groupchat.shared.KeyWordSystem;
+import com.example.hp.groupchat.shared.PackData;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 
-public class ClientConnection extends AsyncTask<String, String, String> {
+public class ClientConnection extends AsyncTask<PackData, PackData, PackData> {
     private String HOST;
     private int PUERTO;
     private MainActivity main;
-    private Socket clientSocket;
+    private Socket socket;
+    private ObjectInputStream inputStream;
+    private ObjectOutputStream outputStream;
     private ClientReceiver clientReceiver;
     private ClientSender clientSender;
     private boolean statusConnection;
@@ -32,38 +34,44 @@ public class ClientConnection extends AsyncTask<String, String, String> {
     }
 
     @Override
-    protected void onProgressUpdate(String... values) {
+    protected void onProgressUpdate(PackData... values) {
 
-        MainActivity.Mensaje mensaje = new MainActivity.Mensaje( values[0], 'R');
+        PackData mensaje = values[0];
+        mensaje.setPos('R');
         main.addNewMsg(mensaje);
 
     }
 
     @Override
-    protected String doInBackground(String... params) {
-        String conexion = "";
+    protected PackData doInBackground(PackData... params) {
+        PackData conexion = null;
         try {
-            clientSocket = new Socket(HOST, PUERTO);
-            DataOutputStream os = new DataOutputStream(clientSocket.getOutputStream());
-            DataInputStream is = new DataInputStream(clientSocket.getInputStream());
+            socket = new Socket(HOST, PUERTO);
+            outputStream = new ObjectOutputStream(socket.getOutputStream());
+             inputStream= new ObjectInputStream(socket.getInputStream());
 
-            os.writeUTF(params[0]);
-            conexion = is.readUTF();
+            outputStream.writeObject(params[0]);
+            conexion = (PackData) inputStream.readObject();
             publishProgress(conexion);
             statusConnection = true;
+
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
         return conexion;
     }
 
     @Override
-    protected void onPostExecute(String s) {
+    protected void onPostExecute(PackData s) {
         Log.e("Conectando paquetes", "Ready");
-        clientReceiver = new ClientReceiver(clientSocket, main);
-        clientReceiver.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, "ok");
-        clientSender = new ClientSender(clientSocket, main);
-        clientSender.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, "Ok");
+        clientReceiver = new ClientReceiver(inputStream, main);
+        clientReceiver.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, new PackData(main.getNombre(), KeyWordSystem.Only_Text,"Ok"));
+
+        clientSender = new ClientSender(outputStream, main);
+        clientSender.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, new PackData(main.getNombre(),KeyWordSystem.Only_Text,"Ok"));
+
 
     }
 

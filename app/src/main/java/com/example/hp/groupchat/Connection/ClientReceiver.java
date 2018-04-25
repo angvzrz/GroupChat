@@ -6,72 +6,77 @@ import android.os.AsyncTask;
 import android.provider.MediaStore;
 import android.util.Log;
 
-import com.example.hp.groupchat.KeyWordSystem;
+import com.example.hp.groupchat.shared.KeyWordSystem;
 import com.example.hp.groupchat.MainActivity;
+import com.example.hp.groupchat.shared.PackData;
 
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.Date;
 
-public class ClientReceiver extends AsyncTask<String, String, Void> {
+public class ClientReceiver extends AsyncTask<PackData, PackData, Void> {
 
-    private Socket clienteSocket;
     private MainActivity main;
-    private DataInputStream inputStream;
+    private ObjectInputStream inputStream;
     private boolean statusConnection;
     private byte[] bitmapdata;
 
-    ClientReceiver(Socket clienteSocket, MainActivity main) {
-        this.clienteSocket = clienteSocket;
+    ClientReceiver(ObjectInputStream inputStream, MainActivity main) {
+        this.inputStream = inputStream;
         this.main = main;
         this.statusConnection=true;
 
     }
 
     @Override
-    protected void onProgressUpdate(String... values) {
+    protected void onProgressUpdate(PackData... values) {
 
-        MainActivity.Mensaje mensaje = new MainActivity.Mensaje( values[0], 'R');
-
-        main.addNewMsg(mensaje);
+        //MainActivity.Mensaje mensaje = new MainActivity.Mensaje( values[0], 'R');
+        PackData msg=values[0];
+        msg.setPos('R');
+        main.addNewMsg(msg);
     }
 
-    @Override
+    /*@Override
     protected void onPreExecute() {
         try {
-            inputStream = new DataInputStream(clienteSocket.getInputStream());
+            inputStream = new ObjectInputStream(clienteSocket.getInputStream());
+            //inputStream.defaultReadObject();
             Log.e("Recepcion", "paso el pre");
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
+    }*/
 
     @Override
-    protected Void doInBackground(String... params) {
+    protected Void doInBackground(PackData... params) {
         Log.e("Recepcion", "doInBackGround");
-        String string;
+        PackData packData;
         while (statusConnection) {
             try {
                 Log.e("Recepcion", "esperando mensaje de entrada" + inputStream.available());
-                string = inputStream.readUTF();
-                Log.e("MSG", string);
-                if (string.contains(KeyWordSystem.File_Transfer)) {
-                    bitmapdata = readBytes();
+                packData = (PackData) inputStream.readObject();
+                Log.e("MSG", packData.toString());
+                if (packData.getType().equals(KeyWordSystem.File_Transfer)) {
+                   /* bitmapdata = readBytes();
                     Bitmap bitmap = BitmapFactory.decodeByteArray(bitmapdata, 0, bitmapdata.length);
 
                     saveImageToGallery(bitmap, string.split(" ")[1]);
-                    publishProgress(string);
+                    publishProgress(string);*/
                 } else {
-                    publishProgress(string);
+                    publishProgress(packData);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
                 statusConnection=false;
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
             }
         }
         return null;
@@ -94,10 +99,10 @@ public class ClientReceiver extends AsyncTask<String, String, Void> {
         output.close();
         Log.d(KeyWordSystem.File_Transfer, "Ok");
         //saveImageToGallery(file);
-        publishProgress(nameFile);
+       // publishProgress(nameFile);
     }
 
-    private byte[] readBytes() throws IOException {
+   /* private byte[] readBytes() throws IOException {
         // Again, probably better to store these objects references in the support class
         InputStream in = clienteSocket.getInputStream();
         DataInputStream dis = new DataInputStream(in);
@@ -127,7 +132,7 @@ public class ClientReceiver extends AsyncTask<String, String, Void> {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
+    }*/
 
     public void setStatusConnection(boolean statusConnection) {
         this.statusConnection = statusConnection;

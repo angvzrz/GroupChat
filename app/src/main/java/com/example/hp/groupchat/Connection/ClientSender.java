@@ -4,44 +4,42 @@ import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import com.example.hp.groupchat.KeyWordSystem;
+import com.example.hp.groupchat.shared.KeyWordSystem;
 import com.example.hp.groupchat.MainActivity;
+import com.example.hp.groupchat.shared.PackData;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.URISyntaxException;
 
-public class ClientSender extends AsyncTask<String, String, String> {
+public class ClientSender extends AsyncTask<PackData, PackData, PackData> {
 
-    private Socket clientSocket;
     private MainActivity main;
-    private DataOutputStream os;
+    private ObjectOutputStream outputStream;
     private boolean statusConnection;
 
-    public ClientSender(Socket clientSocket, MainActivity main) {
-        this.clientSocket = clientSocket;
+    public ClientSender(ObjectOutputStream outputStream, MainActivity main) {
+        this.outputStream=outputStream;
         this.main = main;
 
     }
 
     @Override
-    protected void onPostExecute(String s) {
+    protected void onPostExecute(PackData s) {
 
         super.onPostExecute(s);
-        try {
-            clientSocket.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
     }
 
     @Override
     protected void onPreExecute() {
         try {
-            os = new DataOutputStream(clientSocket.getOutputStream());
+
+            outputStream.writeObject(new PackData(main.getNombre(),KeyWordSystem.Only_Text,main.getNombre()+" "+KeyWordSystem.UserConnected));
             this.statusConnection = true;
         } catch (IOException e) {
             e.printStackTrace();
@@ -49,20 +47,20 @@ public class ClientSender extends AsyncTask<String, String, String> {
     }
 
     @Override
-    protected String doInBackground(String... params) {
+    protected PackData doInBackground(PackData... params) {
 
-        Log.e("doInBackground", params[0]);
+        Log.e("doInBackground", params[0].toString());
         Log.e("Status connection", "TRUE");
         while (statusConnection) {
             try {
-                String message = main.getBq().take();
+                PackData message = main.getBq().take();
                 //main.bq.peek();
-                if (!message.contains(KeyWordSystem.File_Transfer)) {
-                    os.writeUTF(message);
+                if (!message.getType().equals(KeyWordSystem.File_Transfer)) {
+                    outputStream.writeObject(message);
                 } else {
                     Log.e(KeyWordSystem.File_Transfer, "Prepared");
                     onSendFile(message);
-                    Log.e(KeyWordSystem.File_Transfer, message);
+                    Log.e(KeyWordSystem.File_Transfer, message.toString());
                 }
 
             } catch (InterruptedException | URISyntaxException | IOException e) {
@@ -73,8 +71,8 @@ public class ClientSender extends AsyncTask<String, String, String> {
         return null;
     }
 
-    private void onSendFile(String msg) throws IOException, URISyntaxException {
-        System.out.println("Connecting...");
+    private void onSendFile(PackData msg) throws IOException, URISyntaxException {
+        /*System.out.println("Connecting...");
         Log.e(KeyWordSystem.File_Transfer, msg);
         int pos = Integer.parseInt(msg.split(" ")[1]);
         MainActivity.Mensaje mensaje = main.getMen().get(pos);
@@ -85,7 +83,7 @@ public class ClientSender extends AsyncTask<String, String, String> {
         byte[] byteArray = stream.toByteArray();
         bitmap.recycle();
         sendBytes(main.getNombre() + "_img_" + System.currentTimeMillis() + ".png", byteArray);
-        stream.close();
+        stream.close();*/
       /*  byte[] mybytearray = new byte[ myFile.length()];
 
 
@@ -131,13 +129,13 @@ public class ClientSender extends AsyncTask<String, String, String> {
 
         // May be better to save the streams in the support class;
         // just like the socket variable.
-        OutputStream out = clientSocket.getOutputStream();
+       /* OutputStream out = clientSocket.getOutputStream();
         DataOutputStream dos = new DataOutputStream(out);
         dos.writeUTF(KeyWordSystem.File_Transfer + " " + name);
         dos.writeInt(len);
         if (len > 0) {
             dos.write(myByteArray, start, len);
-        }
+        }*/
     }
 
     public void setStatusConnection(boolean statusConnection) {
