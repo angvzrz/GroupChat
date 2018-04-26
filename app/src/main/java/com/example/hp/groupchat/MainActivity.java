@@ -74,7 +74,7 @@ public class MainActivity extends Activity {
         packAdapter = new PackAdapter(this, men);
         final ListView opc = (ListView) findViewById(R.id.opc);
         opc.setAdapter(packAdapter);
-        clientConnection = new ClientConnection("192.168.0.21", 3074, this);
+        clientConnection = new ClientConnection("192.168.0.21", 10001, this);
         clientConnection.execute(new PackData(nombre, KeyWordSystem.Connected, nombre));
 
         enviar.setOnClickListener(new View.OnClickListener() {
