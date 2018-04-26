@@ -1,14 +1,7 @@
 package com.example.hp.groupchat.shared;
 
-import java.io.Serializable;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.Objects;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -24,7 +17,9 @@ public class PackData implements Serializable {
     private String type;
     private String text;
     private String file_name;
-    private int length;
+    private int width;
+    private int height;
+    private int size;
     private byte[] content;
     private final String time;
     private char pos;
@@ -54,9 +49,7 @@ public class PackData implements Serializable {
         return file_name;
     }
 
-    public int getLength() {
-        return length;
-    }
+
 
     public byte[] getContent() {
         return content;
@@ -66,9 +59,6 @@ public class PackData implements Serializable {
         this.file_name = file_name;
     }
 
-    public void setLength(int length) {
-        this.length = length;
-    }
 
     public void setContent(byte[] content) {
         this.content = content;
@@ -94,18 +84,44 @@ public class PackData implements Serializable {
         this.pos = pos;
     }
 
+    public int getWidth() {
+        return width;
+    }
+
+    public void setWidth(int width) {
+        this.width = width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public void setHeight(int height) {
+        this.height = height;
+    }
+
+    public int getSize() {
+        return size;
+    }
+
+    public void setSize(int size) {
+        this.size = size;
+    }
+
     @Override
     public int hashCode() {
-        int hash = 3;
-        hash = 23 * hash + Objects.hashCode(this.from);
-        hash = 23 * hash + this.port_ID;
-        hash = 23 * hash + Objects.hashCode(this.type);
-        hash = 23 * hash + Objects.hashCode(this.text);
-        hash = 23 * hash + Objects.hashCode(this.file_name);
-        hash = 23 * hash + this.length;
-        hash = 23 * hash + Arrays.hashCode(this.content);
-        hash = 23 * hash + Objects.hashCode(this.time);
-        hash = 23 * hash + this.pos;
+        int hash = 7;
+        hash = 79 * hash + Objects.hashCode(this.from);
+        hash = 79 * hash + this.port_ID;
+        hash = 79 * hash + Objects.hashCode(this.type);
+        hash = 79 * hash + Objects.hashCode(this.text);
+        hash = 79 * hash + Objects.hashCode(this.file_name);
+        hash = 79 * hash + this.width;
+        hash = 79 * hash + this.height;
+        hash = 79 * hash + this.size;
+        hash = 79 * hash + Arrays.hashCode(this.content);
+        hash = 79 * hash + Objects.hashCode(this.time);
+        hash = 79 * hash + this.pos;
         return hash;
     }
 
@@ -124,14 +140,12 @@ public class PackData implements Serializable {
         if (this.port_ID != other.port_ID) {
             return false;
         }
-        if (!Objects.equals(this.from, other.from)) {
-            return false;
-        }
         if (!Objects.equals(this.type, other.type)) {
             return false;
         }
-        return Objects.equals(this.time, other.time);
+        return Objects.equals(this.text, other.text);
     }
+
 
     @Override
     public String toString() {

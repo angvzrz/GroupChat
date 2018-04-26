@@ -30,7 +30,7 @@ public class ClientReceiver extends AsyncTask<PackData, PackData, Void> {
     ClientReceiver(ObjectInputStream inputStream, MainActivity main) {
         this.inputStream = inputStream;
         this.main = main;
-        this.statusConnection=true;
+        this.statusConnection = true;
 
     }
 
@@ -38,7 +38,7 @@ public class ClientReceiver extends AsyncTask<PackData, PackData, Void> {
     protected void onProgressUpdate(PackData... values) {
 
         //MainActivity.Mensaje mensaje = new MainActivity.Mensaje( values[0], 'R');
-        PackData msg=values[0];
+        PackData msg = values[0];
         msg.setPos('R');
         main.addNewMsg(msg);
     }
@@ -63,18 +63,19 @@ public class ClientReceiver extends AsyncTask<PackData, PackData, Void> {
                 Log.e("Recepcion", "esperando mensaje de entrada" + inputStream.available());
                 packData = (PackData) inputStream.readObject();
                 Log.e("MSG", packData.toString());
-                if (packData.getType().equals(KeyWordSystem.File_Transfer)) {
+                /*if (packData.getType().equals(KeyWordSystem.File_Transfer)) {
                    /* bitmapdata = readBytes();
                     Bitmap bitmap = BitmapFactory.decodeByteArray(bitmapdata, 0, bitmapdata.length);
 
                     saveImageToGallery(bitmap, string.split(" ")[1]);
-                    publishProgress(string);*/
+                    publishProgress(string);
                 } else {
-                    publishProgress(packData);
-                }
+                }*/
+                publishProgress(packData);
+
             } catch (IOException e) {
                 e.printStackTrace();
-                statusConnection=false;
+                statusConnection = false;
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }
@@ -99,7 +100,7 @@ public class ClientReceiver extends AsyncTask<PackData, PackData, Void> {
         output.close();
         Log.d(KeyWordSystem.File_Transfer, "Ok");
         //saveImageToGallery(file);
-       // publishProgress(nameFile);
+        // publishProgress(nameFile);
     }
 
    /* private byte[] readBytes() throws IOException {

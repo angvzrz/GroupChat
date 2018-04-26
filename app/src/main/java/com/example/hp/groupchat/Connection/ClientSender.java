@@ -55,15 +55,16 @@ public class ClientSender extends AsyncTask<PackData, PackData, PackData> {
             try {
                 PackData message = main.getBq().take();
                 //main.bq.peek();
-                if (!message.getType().equals(KeyWordSystem.File_Transfer)) {
-                    outputStream.writeObject(message);
+                outputStream.writeObject(message);
+
+                /*if (!message.getType().equals(KeyWordSystem.File_Transfer)) {
                 } else {
                     Log.e(KeyWordSystem.File_Transfer, "Prepared");
                     onSendFile(message);
                     Log.e(KeyWordSystem.File_Transfer, message.toString());
-                }
+                }*/
 
-            } catch (InterruptedException | URISyntaxException | IOException e) {
+            } catch (InterruptedException  | IOException e) {
                 e.printStackTrace();
                 statusConnection = false;
             }

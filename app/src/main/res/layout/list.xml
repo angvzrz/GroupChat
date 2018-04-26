@@ -4,46 +4,64 @@
     android:layout_height="wrap_content">
 
     <LinearLayout
-        android:id="@+id/layoutRecibo"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <TextView
-            android:id="@+id/textViewRecibido"
+        android:id="@+id/layoutRecibo"
+        android:orientation="vertical">
+        <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:layout_weight="6"
-            android:background="@drawable/rounded_corner"
-            android:padding="16dp"
-            android:text="Android charting application xml ui design tutorial with example."
-            android:textColor="#000"
-            android:layout_marginRight="25dp"/>
+            android:id="@+id/imageOther" />
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
 
+            <TextView
+                android:id="@+id/textViewRecibido"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:layout_weight="6"
+                android:background="@drawable/rounded_corner"
+                android:padding="16dp"
+                android:text="Recibido"
+                android:textColor="#000"
+                android:layout_marginRight="25dp"/>
+
+        </LinearLayout>
     </LinearLayout>
 
     <LinearLayout
         android:id="@+id/layoutEnvio"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/layout1"
-        android:layout_marginTop="20dp"
-        android:orientation="horizontal"
-        android:layout_gravity="right">
-
-        <TextView
-            android:id="@+id/textViewEnvio"
+        android:orientation="vertical">
+        <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:layout_weight="6"
-            android:background="@drawable/rounded_corner1"
-            android:padding="16dp"
-            android:text="Android charting application xml ui design. Android charting application xml ui design tutorial with example. "
-            android:textColor="#000"
-            android:layout_marginLeft="25dp"
-            android:textAlignment="textEnd"/>
+            android:id="@+id/imageMe"/>
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/layout1"
+            android:layout_marginTop="20dp"
+            android:orientation="horizontal"
+            android:layout_gravity="right">
 
+            <TextView
+                android:id="@+id/textViewEnvio"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:layout_weight="6"
+                android:background="@drawable/rounded_corner1"
+                android:padding="16dp"
+                android:text="Envio"
+                android:textColor="#000"
+                android:layout_marginLeft="25dp"
+                android:textAlignment="textEnd"/>
+
+        </LinearLayout>
     </LinearLayout>
 </FrameLayout>

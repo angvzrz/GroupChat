@@ -16,6 +16,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -24,8 +25,12 @@ import android.widget.Toast;
 import com.example.hp.groupchat.Connection.ClientConnection;
 import com.example.hp.groupchat.shared.KeyWordSystem;
 import com.example.hp.groupchat.shared.PackData;
+import com.example.hp.groupchat.shared.ServerUtils;
 
+import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -59,11 +64,11 @@ public class MainActivity extends Activity {
         bq = new LinkedBlockingQueue();
 
         nombre = "User-" + System.currentTimeMillis();
-        PackData packData = new PackData(nombre, KeyWordSystem.Only_Text, "Este es un mensaje");
+        PackData packData = new PackData(nombre, KeyWordSystem.Only_Text, "Este es un mensaje  mio");
         packData.setPos('E');
         men.add(packData);
 
-        men.add(new PackData(nombre, KeyWordSystem.Only_Text, "Este es un mensaje"));
+        men.add(new PackData(nombre, KeyWordSystem.Only_Text, "Este es un mensaje de otro"));
 
 
         packAdapter = new PackAdapter(this, men);
@@ -112,23 +117,36 @@ public class MainActivity extends Activity {
 
 
             if (data.getData() != null) {
-                Uri imageUri = data.getData();// = conexion.getRealPathFromURI(data.getData());
 
-                PackData msj = new PackData(nombre, KeyWordSystem.File_Transfer, imageUri.getPath());
+                try {
+                    final Uri imageUri = data.getData();
+                    final InputStream imageStream = getContentResolver().openInputStream(imageUri);
+                    final Bitmap bmp = BitmapFactory.decodeStream(imageStream);
 
-                Uri selectedImage = data.getData();
-               /* try {
-                    Bitmap bitmapImage = decodeBitmap(selectedImage);
-                    msj.setBitmap(bitmapImage);
-                    msj.setUriImg(imageUri);
-                    msj.setHasImg(true);
+                    int width = bmp.getWidth();
+                    int height = bmp.getHeight();
+
+                    int size = bmp.getRowBytes() * bmp.getHeight();
+                    ByteBuffer byteBuffer = ByteBuffer.allocate(size);
+                    bmp.copyPixelsToBuffer(byteBuffer);
+                    byte[] byteArray = byteBuffer.array();
+
+                    PackData msj = new PackData(nombre, KeyWordSystem.File_Transfer, bmp.getConfig().name());
+                    msj.setPos('E');
+                    msj.setFile_name(bmp.getConfig().name());
+                    msj.setContent(byteArray);
+                    msj.setSize(size);
+                    msj.setWidth(width);
+                    msj.setHeight(height);
+                    men.add(msj);
+                    packAdapter.notifyDataSetChanged();
+                    bq.add(msj);
+                    mensaje.getText().clear();
+
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
+                    Toast.makeText(main, "Something went wrong", Toast.LENGTH_LONG).show();
                 }
-
-                men.add(msj);
-                adaptador1.notifyDataSetChanged();
-                bq.add(KeyWordSystem.File_Transfer + " " + (men.size() - 1));*/
             } else {
                 //showing toast when unable to capture the image
                 Toast.makeText(main, "Unable to upload Image Please Try again ...", Toast.LENGTH_SHORT).show();
@@ -177,29 +195,6 @@ public class MainActivity extends Activity {
         }
     }
 
-    public Bitmap decodeBitmap(Uri selectedImage) throws FileNotFoundException {
-        BitmapFactory.Options o = new BitmapFactory.Options();
-        o.inJustDecodeBounds = true;
-        BitmapFactory.decodeStream(getContentResolver().openInputStream(selectedImage), null, o);
-
-        final int REQUIRED_SIZE = 100;
-
-        int width_tmp = o.outWidth, height_tmp = o.outHeight;
-        int scale = 1;
-        while (true) {
-            if (width_tmp / 2 < REQUIRED_SIZE || height_tmp / 2 < REQUIRED_SIZE) {
-                break;
-            }
-            width_tmp /= 2;
-            height_tmp /= 2;
-            scale *= 2;
-        }
-
-        BitmapFactory.Options o2 = new BitmapFactory.Options();
-        o2.inSampleSize = scale;
-        return BitmapFactory.decodeStream(getContentResolver().openInputStream(selectedImage), null, o2);
-    }
-
 
     class PackAdapter extends ArrayAdapter<PackData> {
         ArrayList<PackData> data;
@@ -212,21 +207,38 @@ public class MainActivity extends Activity {
         public View getView(final int position, View convertView, ViewGroup parent) {
             LayoutInflater inflater = LayoutInflater.from(getContext());
             View item = inflater.inflate(R.layout.list, null);
-            if (data.get(position).getPos() == 'E') {
-                LinearLayout recibido = (LinearLayout) item.findViewById(R.id.layoutRecibo);
-                recibido.setVisibility(View.GONE);
-                TextView env = (TextView) item.findViewById(R.id.textViewEnvio);
-                PackData msg=data.get(position);
-                String txt = msg.getTime() + " - " + msg.getFrom() + ": " + msg.getText();
+            PackData packData = data.get(position);
+            if (packData.getPos() == 'E') {
+                LinearLayout send =  item.findViewById(R.id.layoutRecibo);
+                send.setVisibility(View.GONE);
+                TextView env =  item.findViewById(R.id.textViewEnvio);
+                String txt = packData.getTime() + " - " + packData.getFrom() + ": " + packData.getText();
                 env.setText(txt);
+                if (packData.getType().equals(KeyWordSystem.File_Transfer)) {
+                    Bitmap.Config configBmp = Bitmap.Config.valueOf(packData.getFile_name());
+                    Bitmap bitmap_tmp = Bitmap.createBitmap(packData.getWidth(), packData.getHeight(), configBmp);
+                    ByteBuffer buffer = ByteBuffer.wrap(packData.getContent());
+                    bitmap_tmp.copyPixelsFromBuffer(buffer);
+                    ImageView imageView=item.findViewById(R.id.imageMe);
+                    imageView.setImageBitmap(bitmap_tmp);
+                }
 
             } else {
-                LinearLayout recibido = (LinearLayout) item.findViewById(R.id.layoutEnvio);
-                recibido.setVisibility(View.GONE);
-                TextView env = (TextView) item.findViewById(R.id.textViewRecibido);
-                PackData msg=data.get(position);
-                String txt = msg.getTime() + " - " + msg.getFrom() + ": " + msg.getText();
+                LinearLayout receiver =  item.findViewById(R.id.layoutEnvio);
+                receiver.setVisibility(View.GONE);
+                TextView env =  item.findViewById(R.id.textViewRecibido);
+
+                String txt = packData.getTime() + " - " + packData.getFrom() + ": " + packData.getText();
                 env.setText(txt);
+                if (packData.getType().equals(KeyWordSystem.File_Transfer)) {
+                    Bitmap.Config configBmp = Bitmap.Config.valueOf(packData.getFile_name());
+                    Bitmap bitmap_tmp = Bitmap.createBitmap(packData.getWidth(), packData.getHeight(), configBmp);
+                    ByteBuffer buffer = ByteBuffer.wrap(packData.getContent());
+                    bitmap_tmp.copyPixelsFromBuffer(buffer);
+                    ImageView imageView=item.findViewById(R.id.imageOther);
+                    imageView.setImageBitmap(bitmap_tmp);
+                }
+
 
             }
             return (item);
