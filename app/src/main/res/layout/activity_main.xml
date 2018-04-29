@@ -5,12 +5,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context="com.example.hp.groupchat.MainActivity">
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/select_img"
-        android:onClick="chooseImg"
-        android:layout_weight="1"/>
+
     <ListView
         android:layout_weight="5"
         android:layout_width="match_parent"
@@ -20,11 +15,10 @@
 
     </ListView>
 
-
     <include
         layout="@layout/type_message_area"
         android:layout_width="match_parent"
-        android:layout_weight="2"
+        android:layout_weight="1"
         android:layout_height="wrap_content"
         android:gravity="bottom" />
 

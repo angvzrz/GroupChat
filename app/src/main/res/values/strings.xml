@@ -2,4 +2,11 @@
     <string name="app_name">GroupChat</string>
     <string name="select_img">Select Img</string>
     <string name="s_nothing">Nothing</string>
+    <string name="speech_prompt">Di algo</string>
+    <string name="speech_not_supported">Entrada de voz no soportada!!!</string>
+    <string name="tap_on_mic">Presiona el micrófono para hablar</string>
+    <string name="add">Add</string>
+    <string name="reset">Reset</string>
+    <string name="about">About</string>
+    <string name="exit">Exit</string>
 </resources>

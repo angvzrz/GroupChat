@@ -1,7 +1,9 @@
 package com.example.hp.groupchat;
 
 import android.Manifest;
+import android.app.ActionBar;
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -9,8 +11,12 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.speech.RecognizerIntent;
 import android.support.v4.app.ActivityCompat;
+import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -35,18 +41,21 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.concurrent.LinkedBlockingQueue;
 
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
     private LinkedBlockingQueue<PackData> bq;
     private ArrayList<PackData> men;
     private PackAdapter packAdapter;
     private String nombre;
-    private ImageButton enviar;
+    private ImageButton enviar, mic;
     private EditText mensaje;
     private ClientConnection clientConnection;
     private MainActivity main;
-    public static final int PICK_IMAGE = 1821312;
+
+    public static final int PICK_IMAGE = 182;
+    private static final int REQ_CODE_SPEECH_INPUT = 101;
     // Storage Permissions
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
     private static String[] PERMISSIONS_STORAGE = {
@@ -59,8 +68,9 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        enviar = (ImageButton) findViewById(R.id.msg);
-        mensaje = (EditText) findViewById(R.id.gentxt);
+        enviar = findViewById(R.id.msg);
+        mensaje = findViewById(R.id.gentxt);
+        mic = findViewById(R.id.voz);
         men = new ArrayList<>();
         main = this;
         bq = new LinkedBlockingQueue();
@@ -74,9 +84,9 @@ public class MainActivity extends Activity {
 
 
         packAdapter = new PackAdapter(this, men);
-        final ListView opc = (ListView) findViewById(R.id.opc);
+        final ListView opc = findViewById(R.id.opc);
         opc.setAdapter(packAdapter);
-        clientConnection = new ClientConnection("192.168.0.21", 10001, this);
+        clientConnection = new ClientConnection("192.168.0.8", 10001, this);
         clientConnection.execute(new PackData(nombre, KeyWordSystem.Connected, nombre));
 
         enviar.setOnClickListener(new View.OnClickListener() {
@@ -89,6 +99,12 @@ public class MainActivity extends Activity {
                 bq.add(packData);
                 mensaje.getText().clear();
 
+            }
+        });
+        mic.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+               promptSpeechInput();
             }
         });
         verifyStoragePermissions(this);
@@ -104,74 +120,106 @@ public class MainActivity extends Activity {
         }
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu, menu);
+        return true;
+    }
 
-    public void chooseImg(View view) {
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.add:
+                chooseImg();
+                return (true);
+            case R.id.reset:
+                Toast.makeText(this, "Reset menu", Toast.LENGTH_LONG).show();
+
+                return (true);
+            case R.id.about:
+                Toast.makeText(this, "About menu", Toast.LENGTH_LONG).show();
+                return (true);
+            case R.id.exit:
+                finish();
+                return (true);
+
+        }
+        return (super.onOptionsItemSelected(item));
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        if (resultCode == Activity.RESULT_OK) {
+            switch (requestCode) {
+                case REQ_CODE_SPEECH_INPUT:
+                    if (data != null) {
+                        ArrayList<String> result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                        Iterator i = result.iterator();
+                        String s = "";
+                        while (i.hasNext()) {
+                            s = (String) i.next();
+                        }
+                        mensaje.setText(s);
+                    }
+                    break;
+                case PICK_IMAGE:
+                    if (data.getData() != null) {
+
+                        try {
+                            final Uri imageUri = data.getData();
+                            final InputStream imageStream = getContentResolver().openInputStream(imageUri);
+
+                            byte[] byteArray = readBytes(imageStream);
+                            PackData msj = new PackData(nombre, KeyWordSystem.File_Transfer, "");
+                            msj.setPos('E');
+                            msj.setContent(byteArray);
+
+                            men.add(msj);
+                            packAdapter.notifyDataSetChanged();
+                            bq.add(msj);
+                            mensaje.getText().clear();
+
+                        } catch (FileNotFoundException e) {
+                            e.printStackTrace();
+                            Toast.makeText(main, "Something went wrong", Toast.LENGTH_LONG).show();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    } else {
+                        //showing toast when unable to capture the image
+                        Toast.makeText(main, "Unable to upload Image Please Try again ...", Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+            }
+        }
+    }
+
+    public void chooseImg() {
         Intent intent = new Intent();
         intent.setType("image/png");
         intent.setAction(Intent.ACTION_GET_CONTENT);
         startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE);
     }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-
-        if (resultCode == Activity.RESULT_OK && requestCode == PICK_IMAGE) {
-
-
-            if (data.getData() != null) {
-
-                try {
-                    final Uri imageUri = data.getData();
-                    final InputStream imageStream = getContentResolver().openInputStream(imageUri);
-/*
-                    final Bitmap bmp = BitmapFactory.decodeStream(imageStream);
-
-                    int width = bmp.getWidth();
-                    int height = bmp.getHeight();
-
-                    int size = bmp.getRowBytes() * bmp.getHeight();
-                    ByteBuffer byteBuffer = ByteBuffer.allocate(size);
-                    bmp.copyPixelsToBuffer(byteBuffer);
-                    byte[] byteArray = byteBuffer.array();
-                    */
-                    byte[] byteArray = readBytes(imageStream);
-                    PackData msj = new PackData(nombre, KeyWordSystem.File_Transfer, "");
-                    msj.setPos('E');
-                    //msj.setFile_name(bmp.getConfig().name());
-                    msj.setContent(byteArray);
-                  /*  msj.setSize(size);
-                    msj.setWidth(width);
-                    msj.setHeight(height);*/
-                    men.add(msj);
-                    packAdapter.notifyDataSetChanged();
-                    bq.add(msj);
-                    mensaje.getText().clear();
-
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                    Toast.makeText(main, "Something went wrong", Toast.LENGTH_LONG).show();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            } else {
-                //showing toast when unable to capture the image
-                Toast.makeText(main, "Unable to upload Image Please Try again ...", Toast.LENGTH_SHORT).show();
-            }
+    private void promptSpeechInput() {
+        Intent intentvoice = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intentvoice.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        intentvoice.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "es");
+        intentvoice.putExtra(RecognizerIntent.EXTRA_PROMPT, getString(R.string.speech_prompt));
+        try {
+            startActivityForResult(intentvoice, REQ_CODE_SPEECH_INPUT);
+        } catch (ActivityNotFoundException a) {
+            Toast.makeText(getApplicationContext(), getString(R.string.speech_not_supported), Toast.LENGTH_SHORT).show();
         }
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        //bq.add(KeyWordSystem.Close_Connection);
-    }
-
     public void handleSendImage(Intent intent) {
-        Uri imageUri = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
+        Uri imageUri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
         if (imageUri != null) {
             PackData msj = new PackData(nombre, KeyWordSystem.File_Transfer, imageUri.getPath());
             msj.setPos('E');
-            //msj.setImageUri(imageUri);
             men.add(msj);
             packAdapter.notifyDataSetChanged();
 
@@ -248,10 +296,6 @@ public class MainActivity extends Activity {
                 String txt = packData.getTime() + " - " + packData.getFrom() + ": " + packData.getText();
                 env.setText(txt);
                 if (packData.getType().equals(KeyWordSystem.File_Transfer)) {
-                   /* Bitmap.Config configBmp = Bitmap.Config.valueOf(packData.getFile_name());
-                    Bitmap bitmap_tmp = Bitmap.createBitmap(packData.getWidth(), packData.getHeight(), configBmp);
-                    ByteBuffer buffer = ByteBuffer.wrap(packData.getContent());
-                    bitmap_tmp.copyPixelsFromBuffer(buffer);*/
                     ImageView imageView = item.findViewById(R.id.imageMe);
                     InputStream is = new ByteArrayInputStream(packData.getContent());
                     Bitmap bmp = BitmapFactory.decodeStream(is);
@@ -266,10 +310,7 @@ public class MainActivity extends Activity {
                 String txt = packData.getTime() + " - " + packData.getFrom() + ": " + packData.getText();
                 env.setText(txt);
                 if (packData.getType().equals(KeyWordSystem.File_Transfer)) {
-                   /* Bitmap.Config configBmp = Bitmap.Config.valueOf(packData.getFile_name());
-                    Bitmap bitmap_tmp = Bitmap.createBitmap(packData.getWidth(), packData.getHeight(), configBmp);
-                    ByteBuffer buffer = ByteBuffer.wrap(packData.getContent());
-                    bitmap_tmp.copyPixelsFromBuffer(buffer);*/
+
                     InputStream is = new ByteArrayInputStream(packData.getContent());
                     Bitmap bmp = BitmapFactory.decodeStream(is);
                     ImageView imageView = item.findViewById(R.id.imageOther);
