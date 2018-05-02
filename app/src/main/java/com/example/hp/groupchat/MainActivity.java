@@ -1,7 +1,6 @@
 package com.example.hp.groupchat;
 
 import android.Manifest;
-import android.app.ActionBar;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
@@ -14,6 +13,8 @@ import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -31,15 +32,12 @@ import android.widget.Toast;
 import com.example.hp.groupchat.Connection.ClientConnection;
 import com.example.hp.groupchat.shared.KeyWordSystem;
 import com.example.hp.groupchat.shared.PackData;
-import com.example.hp.groupchat.shared.ServerUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -49,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<PackData> men;
     private PackAdapter packAdapter;
     private String nombre;
-    private ImageButton enviar, mic;
+    private ImageButton enviar;
     private EditText mensaje;
     private ClientConnection clientConnection;
     private MainActivity main;
@@ -70,10 +68,33 @@ public class MainActivity extends AppCompatActivity {
 
         enviar = findViewById(R.id.msg);
         mensaje = findViewById(R.id.gentxt);
-        mic = findViewById(R.id.voz);
         men = new ArrayList<>();
         main = this;
         bq = new LinkedBlockingQueue();
+
+        mensaje.addTextChangedListener(new TextWatcher() {
+
+            @Override
+            public void afterTextChanged(Editable s) {
+            }
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start,
+                                          int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start,
+                                      int before, int count) {
+                if(isEmpty(mensaje)){
+                    enviar.setImageResource(android.R.drawable.ic_btn_speak_now);
+                }else{
+                    enviar.setImageResource(android.R.drawable.ic_menu_send);
+                }
+
+
+            }
+        });
 
         nombre = "User-" + System.currentTimeMillis();
         PackData packData = new PackData(nombre, KeyWordSystem.Only_Text, "Este es un mensaje  mio");
@@ -92,19 +113,16 @@ public class MainActivity extends AppCompatActivity {
         enviar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                PackData packData = new PackData(nombre, KeyWordSystem.Only_Text, mensaje.getText().toString());
-                packData.setPos('E');
-                men.add(packData);
-                packAdapter.notifyDataSetChanged();
-                bq.add(packData);
-                mensaje.getText().clear();
-
-            }
-        });
-        mic.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-               promptSpeechInput();
+                if (!isEmpty(mensaje)){
+                    PackData packData = new PackData(nombre, KeyWordSystem.Only_Text, mensaje.getText().toString());
+                    packData.setPos('E');
+                    men.add(packData);
+                    packAdapter.notifyDataSetChanged();
+                    bq.add(packData);
+                    mensaje.getText().clear();
+                }else{
+                    promptSpeechInput();
+                }
             }
         });
         verifyStoragePermissions(this);
@@ -118,6 +136,9 @@ public class MainActivity extends AppCompatActivity {
                 handleSendImage(intent); // Handle single image being sent
             }
         }
+
+        opc.setTranscriptMode(ListView.TRANSCRIPT_MODE_NORMAL);
+        opc.setStackFromBottom(true);
     }
 
     @Override
@@ -323,6 +344,10 @@ public class MainActivity extends AppCompatActivity {
 
         }
 
+    }
+
+    private boolean isEmpty(EditText etText) {
+        return etText.getText().toString().trim().length() == 0;
     }
 
     public PackAdapter getPackAdapter() {

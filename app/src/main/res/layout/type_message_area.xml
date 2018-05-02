@@ -3,34 +3,23 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/colorPrimaryDark"
-    android:gravity="bottom"
     android:orientation="horizontal">
-    <ImageButton
-        android:id="@+id/voz"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="5"
-        android:padding="4dp"
-        android:layout_gravity="center"
-        android:src="@android:drawable/ic_btn_speak_now" />
     <EditText
         android:id="@+id/gentxt"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
+        android:layout_weight="15"
         android:textColorHint="#CFD8DC"
         android:textColor="#CFD8DC"
         android:maxLines="4"
-        android:hint="Write a message" />
+        android:hint="Escribe un mensaje aquí" />
 
     <ImageButton
         android:id="@+id/msg"
-        android:layout_width="match_parent"
+        android:layout_weight="1"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_weight="5"
         android:padding="4dp"
-        android:layout_gravity="center"
-        android:src="@android:drawable/ic_menu_send" />
-
+        android:src="@android:drawable/ic_btn_speak_now" />
 
 </LinearLayout>
