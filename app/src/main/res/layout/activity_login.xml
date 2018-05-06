@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_gravity="center"
+    android:background="@color/colorPrimaryDark"
+    android:orientation="vertical"
+    tools:context="com.example.hp.groupchat.LoginActivity">
+
+        <ImageView
+            android:id="@+id/logo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/fab_margin"
+            android:paddingBottom="@dimen/fab_margin"
+            android:src="@drawable/logo1"/>
+
+        <EditText
+            android:id="@+id/namelbl"
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:textAlignment="center"
+            android:paddingTop="@dimen/fab_margin"
+            android:paddingBottom="@dimen/fab_margin"
+            android:background="@android:color/transparent"
+            android:layout_alignBottom="@+id/Etiqueta1"
+            android:textSize="15sp"
+            android:text=""
+            android:textColorHint="#CFD8DC"
+            android:textColor="#CFD8DC"
+            android:hint="Introduzca su nombre de usuario aquí"
+            />
+        <Button
+            android:id="@+id/sesion"
+            android:layout_alignEnd="@+id/namelbl"
+            android:layout_width="85dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:paddingTop="@dimen/fab_margin"
+            android:paddingBottom="@dimen/fab_margin"
+            android:textColor="#000000"
+            android:background="#FFFFFF"
+            style="?android:borderlessButtonStyle"
+            android:onClick="onClick"
+            android:typeface="sans"
+            android:text="Ingresar"/>
+</LinearLayout>
+

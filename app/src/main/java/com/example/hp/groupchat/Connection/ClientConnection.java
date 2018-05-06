@@ -10,6 +10,8 @@ import com.example.hp.groupchat.MainActivity;
 import com.example.hp.groupchat.shared.KeyWordSystem;
 import com.example.hp.groupchat.shared.PackData;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -20,8 +22,8 @@ public class ClientConnection extends AsyncTask<PackData, PackData, PackData> {
     private int PUERTO;
     private MainActivity main;
     private Socket socket;
-    private ObjectInputStream inputStream;
-    private ObjectOutputStream outputStream;
+    private DataInputStream inputStream;
+    private DataOutputStream outputStream;
     private ClientReceiver clientReceiver;
     private ClientSender clientSender;
     private boolean statusConnection;
@@ -47,17 +49,16 @@ public class ClientConnection extends AsyncTask<PackData, PackData, PackData> {
         PackData conexion = null;
         try {
             socket = new Socket(HOST, PUERTO);
-            outputStream = new ObjectOutputStream(socket.getOutputStream());
-             inputStream= new ObjectInputStream(socket.getInputStream());
+            outputStream = new DataOutputStream(socket.getOutputStream());
+             inputStream= new DataInputStream(socket.getInputStream());
 
-            outputStream.writeObject(params[0]);
-            conexion = (PackData) inputStream.readObject();
+            outputStream.writeUTF(params[0].getFrom());
+            String response=inputStream.readUTF();
+            conexion = new PackData(KeyWordSystem._Bot,KeyWordSystem.Only_Text,response);
             publishProgress(conexion);
             statusConnection = true;
 
         } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
         return conexion;
@@ -76,16 +77,6 @@ public class ClientConnection extends AsyncTask<PackData, PackData, PackData> {
     }
 
 
-    public String getRealPathFromURI(Uri contentUri) {
-        String res = null;
-        String[] proj = {MediaStore.Images.Media.DATA};
-        Cursor cursor = main.getContentResolver().query(contentUri, proj, null, null, null);
-        if (cursor.moveToFirst()) {
-            int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-            res = cursor.getString(column_index);
-        }
-        cursor.close();
-        return res;
-    }
+
 
 }

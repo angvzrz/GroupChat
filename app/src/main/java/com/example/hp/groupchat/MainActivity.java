@@ -65,6 +65,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Bundle bundle = this.getIntent().getExtras();
+        //Construimos el mensaje a mostrar
+        nombre = bundle.getString("name");
 
         enviar = findViewById(R.id.msg);
         mensaje = findViewById(R.id.gentxt);
@@ -96,35 +99,22 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        nombre = "User-" + System.currentTimeMillis();
-        PackData packData = new PackData(nombre, KeyWordSystem.Only_Text, "Este es un mensaje  mio");
-        packData.setPos('E');
+       // nombre = "User-" + System.currentTimeMillis();
+        PackData packData = new PackData(nombre, KeyWordSystem.Only_Text, "Este es un mensaje de alguien mas");
+        packData.setPos('R');
         men.add(packData);
 
-        men.add(new PackData(nombre, KeyWordSystem.Only_Text, "Este es un mensaje de otro"));
+        men.add(new PackData(nombre, KeyWordSystem.Only_Text, "Este es un mensaje mio"));
 
 
         packAdapter = new PackAdapter(this, men);
         final ListView opc = findViewById(R.id.opc);
         opc.setAdapter(packAdapter);
-        clientConnection = new ClientConnection("192.168.0.8", 10001, this);
+        //clientConnection = new ClientConnection("187.213.202.80", 10001, this);
+        clientConnection=new ClientConnection("192.168.0.8",10001,this);
         clientConnection.execute(new PackData(nombre, KeyWordSystem.Connected, nombre));
 
-        enviar.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (!isEmpty(mensaje)){
-                    PackData packData = new PackData(nombre, KeyWordSystem.Only_Text, mensaje.getText().toString());
-                    packData.setPos('E');
-                    men.add(packData);
-                    packAdapter.notifyDataSetChanged();
-                    bq.add(packData);
-                    mensaje.getText().clear();
-                }else{
-                    promptSpeechInput();
-                }
-            }
-        });
+
         verifyStoragePermissions(this);
         // Get intent, action and MIME type
         Intent intent = getIntent();
@@ -214,6 +204,34 @@ public class MainActivity extends AppCompatActivity {
                     }
                     break;
             }
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle bundle){
+        super.onSaveInstanceState(bundle);
+        bundle.putString("name",nombre);
+    }
+
+    @Override
+    protected void onDestroy(){
+        super.onDestroy();
+        if (clientConnection!=null){
+            bq.add(new PackData(nombre,KeyWordSystem.Close_Connection,KeyWordSystem.Close_Connection));
+        }
+        finish();
+    }
+
+    public void handleAction(View view){
+        if (!isEmpty(mensaje)){
+            PackData packData = new PackData(nombre, KeyWordSystem.Only_Text, mensaje.getText().toString());
+            packData.setPos('E');
+            men.add(packData);
+            packAdapter.notifyDataSetChanged();
+            bq.add(packData);
+            mensaje.getText().clear();
+        }else{
+            promptSpeechInput();
         }
     }
 
@@ -350,9 +368,6 @@ public class MainActivity extends AppCompatActivity {
         return etText.getText().toString().trim().length() == 0;
     }
 
-    public PackAdapter getPackAdapter() {
-        return packAdapter;
-    }
 
     public void addNewMsg(PackData mensaje) {
         men.add(mensaje);
@@ -363,15 +378,10 @@ public class MainActivity extends AppCompatActivity {
         return bq;
     }
 
-    public MainActivity getMain() {
-        return main;
-    }
 
     public String getNombre() {
         return nombre;
     }
 
-    public ArrayList<PackData> getMen() {
-        return men;
-    }
+
 }

@@ -19,10 +19,10 @@ import java.net.URISyntaxException;
 public class ClientSender extends AsyncTask<PackData, PackData, PackData> {
 
     private MainActivity main;
-    private ObjectOutputStream outputStream;
+    private DataOutputStream outputStream;
     private boolean statusConnection;
 
-    public ClientSender(ObjectOutputStream outputStream, MainActivity main) {
+    public ClientSender(DataOutputStream outputStream, MainActivity main) {
         this.outputStream=outputStream;
         this.main = main;
 
@@ -39,7 +39,7 @@ public class ClientSender extends AsyncTask<PackData, PackData, PackData> {
     protected void onPreExecute() {
         try {
 
-            outputStream.writeObject(new PackData(main.getNombre(),KeyWordSystem.Only_Text,main.getNombre()+" "+KeyWordSystem.UserConnected));
+            outputStream.writeUTF(main.getNombre()+" "+KeyWordSystem.UserConnected);
             this.statusConnection = true;
         } catch (IOException e) {
             e.printStackTrace();
@@ -55,14 +55,14 @@ public class ClientSender extends AsyncTask<PackData, PackData, PackData> {
             try {
                 PackData message = main.getBq().take();
                 //main.bq.peek();
-                outputStream.writeObject(message);
 
-                /*if (!message.getType().equals(KeyWordSystem.File_Transfer)) {
+                if (!message.getType().equals(KeyWordSystem.File_Transfer)) {
+                    outputStream.writeUTF(message.getFrom()+" " +message.getText());
                 } else {
                     Log.e(KeyWordSystem.File_Transfer, "Prepared");
-                    onSendFile(message);
+                    sendBytes(message.getContent());
                     Log.e(KeyWordSystem.File_Transfer, message.toString());
-                }*/
+                }
 
             } catch (InterruptedException  | IOException e) {
                 e.printStackTrace();
@@ -117,11 +117,11 @@ public class ClientSender extends AsyncTask<PackData, PackData, PackData> {
 
     }
 
-    public void sendBytes(String name, byte[] myByteArray) throws IOException {
-        sendBytes(name, myByteArray, 0, myByteArray.length);
+    public void sendBytes( byte[] myByteArray) throws IOException {
+        sendBytes( myByteArray, 0, myByteArray.length);
     }
 
-    public void sendBytes(String name, byte[] myByteArray, int start, int len) throws IOException {
+    public void sendBytes( byte[] myByteArray, int start, int len) throws IOException {
         if (len < 0)
             throw new IllegalArgumentException("Negative length not allowed");
         if (start < 0 || start >= myByteArray.length)
@@ -130,13 +130,13 @@ public class ClientSender extends AsyncTask<PackData, PackData, PackData> {
 
         // May be better to save the streams in the support class;
         // just like the socket variable.
-       /* OutputStream out = clientSocket.getOutputStream();
+        OutputStream out = outputStream;
         DataOutputStream dos = new DataOutputStream(out);
-        dos.writeUTF(KeyWordSystem.File_Transfer + " " + name);
+        dos.writeUTF(KeyWordSystem.File_Transfer + " " + main.getNombre());
         dos.writeInt(len);
         if (len > 0) {
             dos.write(myByteArray, start, len);
-        }*/
+        }
     }
 
     public void setStatusConnection(boolean statusConnection) {
