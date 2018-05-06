@@ -99,7 +99,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-       // nombre = "User-" + System.currentTimeMillis();
         PackData packData = new PackData(nombre, KeyWordSystem.Only_Text, "Este es un mensaje de alguien mas");
         packData.setPos('R');
         men.add(packData);
@@ -111,9 +110,8 @@ public class MainActivity extends AppCompatActivity {
         final ListView opc = findViewById(R.id.opc);
         opc.setAdapter(packAdapter);
         //clientConnection = new ClientConnection("187.213.202.80", 10001, this);
-        clientConnection=new ClientConnection("192.168.0.8",10001,this);
+        clientConnection=new ClientConnection("192.168.1.65",10001,this);
         clientConnection.execute(new PackData(nombre, KeyWordSystem.Connected, nombre));
-
 
         verifyStoragePermissions(this);
         // Get intent, action and MIME type
@@ -172,7 +170,12 @@ public class MainActivity extends AppCompatActivity {
                         while (i.hasNext()) {
                             s = (String) i.next();
                         }
-                        mensaje.setText(s);
+                        PackData packData = new PackData(nombre, KeyWordSystem.Only_Text, ":" + s);
+                        packData.setPos('E');
+                        men.add(packData);
+                        packAdapter.notifyDataSetChanged();
+                        bq.add(packData);
+                        //mensaje.setText(s);
                     }
                     break;
                 case PICK_IMAGE:
@@ -217,14 +220,14 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy(){
         super.onDestroy();
         if (clientConnection!=null){
-            bq.add(new PackData(nombre,KeyWordSystem.Close_Connection,KeyWordSystem.Close_Connection));
+            bq.add(new PackData(nombre, KeyWordSystem.Close_Connection, KeyWordSystem.Close_Connection));
         }
         finish();
     }
 
     public void handleAction(View view){
         if (!isEmpty(mensaje)){
-            PackData packData = new PackData(nombre, KeyWordSystem.Only_Text, mensaje.getText().toString());
+            PackData packData = new PackData(nombre, KeyWordSystem.Only_Text, ":" + mensaje.getText().toString());
             packData.setPos('E');
             men.add(packData);
             packAdapter.notifyDataSetChanged();
@@ -257,7 +260,7 @@ public class MainActivity extends AppCompatActivity {
     public void handleSendImage(Intent intent) {
         Uri imageUri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
         if (imageUri != null) {
-            PackData msj = new PackData(nombre, KeyWordSystem.File_Transfer, imageUri.getPath());
+            PackData msj = new PackData(nombre, KeyWordSystem.File_Transfer, ":"+imageUri.getPath());
             msj.setPos('E');
             men.add(msj);
             packAdapter.notifyDataSetChanged();

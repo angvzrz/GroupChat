@@ -15,7 +15,6 @@
             android:layout_marginTop="@dimen/fab_margin"
             android:paddingBottom="@dimen/fab_margin"
             android:src="@drawable/logo1"/>
-
         <EditText
             android:id="@+id/namelbl"
             android:layout_width="300dp"
@@ -30,6 +29,7 @@
             android:text=""
             android:textColorHint="#CFD8DC"
             android:textColor="#CFD8DC"
+            android:inputType="text"
             android:hint="Introduzca su nombre de usuario aquí"
             />
         <Button
