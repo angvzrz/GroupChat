@@ -12,6 +12,7 @@
         android:textColorHint="#CFD8DC"
         android:textColor="#CFD8DC"
         android:maxLines="4"
+        android:inputType="textCapSentences"
         android:hint="Escribe un mensaje aquí" />
 
     <ImageButton

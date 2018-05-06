@@ -14,6 +14,7 @@ import android.speech.RecognizerIntent;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -91,6 +92,7 @@ public class MainActivity extends AppCompatActivity {
                                       int before, int count) {
                 if(isEmpty(mensaje)){
                     enviar.setImageResource(android.R.drawable.ic_btn_speak_now);
+                    mensaje.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
                 }else{
                     enviar.setImageResource(android.R.drawable.ic_menu_send);
                 }
