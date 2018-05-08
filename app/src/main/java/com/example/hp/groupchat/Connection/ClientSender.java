@@ -1,6 +1,5 @@
 package com.example.hp.groupchat.Connection;
 
-import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -8,12 +7,10 @@ import com.example.hp.groupchat.shared.KeyWordSystem;
 import com.example.hp.groupchat.MainActivity;
 import com.example.hp.groupchat.shared.PackData;
 
-import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
-import java.net.Socket;
 import java.net.URISyntaxException;
 
 public class ClientSender extends AsyncTask<PackData, PackData, PackData> {
@@ -39,8 +36,8 @@ public class ClientSender extends AsyncTask<PackData, PackData, PackData> {
     protected void onPreExecute() {
         try {
 
-            //outputStream.writeUTF(main.getNombre()+" "+KeyWordSystem.UserConnected);
-            outputStream.writeObject(new PackData(main.getNombre(), KeyWordSystem.UserConnected, KeyWordSystem.UserConnected));
+            //outputStream.writeUTF(main.getUserName()+" "+KeyWordSystem.UserConnected);
+            outputStream.writeObject(new PackData(main.getUserName(), KeyWordSystem.UserConnected, KeyWordSystem.UserConnected));
             this.statusConnection = true;
         } catch (IOException e) {
             e.printStackTrace();
@@ -85,7 +82,7 @@ public class ClientSender extends AsyncTask<PackData, PackData, PackData> {
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
         byte[] byteArray = stream.toByteArray();
         bitmap.recycle();
-        sendBytes(main.getNombre() + "_img_" + System.currentTimeMillis() + ".png", byteArray);
+        sendBytes(main.getUserName() + "_img_" + System.currentTimeMillis() + ".png", byteArray);
         stream.close();*/
       /*  byte[] mybytearray = new byte[ myFile.length()];
 
@@ -134,7 +131,7 @@ public class ClientSender extends AsyncTask<PackData, PackData, PackData> {
         // just like the socket variable.
         OutputStream out = outputStream;
         DataOutputStream dos = new DataOutputStream(out);
-        dos.writeUTF(KeyWordSystem.File_Transfer + " " + main.getNombre());
+        dos.writeUTF(KeyWordSystem.File_Transfer + " " + main.getUserName());
         dos.writeInt(len);
         if (len > 0) {
             dos.write(myByteArray, start, len);
