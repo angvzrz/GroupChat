@@ -1,17 +1,12 @@
 package com.example.hp.groupchat.Connection;
 
-import android.database.Cursor;
-import android.net.Uri;
 import android.os.AsyncTask;
-import android.provider.MediaStore;
 import android.util.Log;
 
 import com.example.hp.groupchat.MainActivity;
 import com.example.hp.groupchat.shared.KeyWordSystem;
 import com.example.hp.groupchat.shared.PackData;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -71,10 +66,10 @@ public class ClientConnection extends AsyncTask<PackData, PackData, PackData> {
     protected void onPostExecute(PackData s) {
         Log.e("Conectando paquetes", "Ready");
         clientReceiver = new ClientReceiver(inputStream, main);
-        clientReceiver.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, new PackData(main.getNombre(), KeyWordSystem.Text_Only, "Ok"));
+        clientReceiver.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, new PackData(main.getUserName(), KeyWordSystem.Text_Only, "Ok"));
 
         clientSender = new ClientSender(outputStream, main);
-        clientSender.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, new PackData(main.getNombre(), KeyWordSystem.Text_Only, "Ok"));
+        clientSender.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, new PackData(main.getUserName(), KeyWordSystem.Text_Only, "Ok"));
 
 
     }

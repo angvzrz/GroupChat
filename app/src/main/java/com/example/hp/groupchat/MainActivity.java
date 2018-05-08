@@ -45,9 +45,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class MainActivity extends AppCompatActivity {
     private LinkedBlockingQueue<PackData> bq;
-    private ArrayList<PackData> men;
+    private ArrayList<PackData> sentMessages;
     private PackAdapter packAdapter;
-    private String nombre;
+    private String userName;
     private ImageButton enviar;
     private EditText mensaje;
     private ClientConnection clientConnection;
@@ -68,11 +68,11 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Bundle bundle = this.getIntent().getExtras();
         //Construimos el mensaje a mostrar
-        nombre = bundle.getString("name");
+        userName = bundle.getString("name");
 
         enviar = findViewById(R.id.msg);
         mensaje = findViewById(R.id.gentxt);
-        men = new ArrayList<>();
+        sentMessages = new ArrayList<>();
         main = this;
         bq = new LinkedBlockingQueue();
 
@@ -83,37 +83,34 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void beforeTextChanged(CharSequence s, int start,
-                                          int count, int after) {
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
             }
 
             @Override
-            public void onTextChanged(CharSequence s, int start,
-                                      int before, int count) {
-                if(isEmpty(mensaje)){
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+                if (isEmpty(mensaje)) {
                     enviar.setImageResource(android.R.drawable.ic_btn_speak_now);
                     mensaje.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
-                }else{
+                }
+                else {
                     enviar.setImageResource(android.R.drawable.ic_menu_send);
                 }
-
-
             }
         });
 
         PackData packData = new PackData("Other", KeyWordSystem.Text_Only, "Este es un mensaje de alguien mas");
         packData.setPos('R');
-        men.add(packData);
+        sentMessages.add(packData);
+        sentMessages.add(new PackData(userName, KeyWordSystem.Text_Only, "Este es un mensaje mio"));
 
-        men.add(new PackData(nombre, KeyWordSystem.Text_Only, "Este es un mensaje mio"));
 
-
-        packAdapter = new PackAdapter(this, men);
-        final ListView opc = findViewById(R.id.opc);
-        opc.setAdapter(packAdapter);
+        packAdapter = new PackAdapter(this, sentMessages);
+        final ListView listViewChatMessages = findViewById(R.id.lv_chat_messages_main);
+        listViewChatMessages.setAdapter(packAdapter);
         clientConnection = new ClientConnection("187.213.202.80", 10001, this);
         //clientConnection=new ClientConnection("192.168.0.21",10001,this);
-        clientConnection.execute(new PackData(nombre, KeyWordSystem.Connected, nombre));
+        clientConnection.execute(new PackData(userName, KeyWordSystem.Connected, userName));
 
         verifyStoragePermissions(this);
         // Get intent, action and MIME type
@@ -127,13 +124,13 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        opc.setTranscriptMode(ListView.TRANSCRIPT_MODE_NORMAL);
-        opc.setStackFromBottom(true);
+        listViewChatMessages.setTranscriptMode(ListView.TRANSCRIPT_MODE_NORMAL);
+        listViewChatMessages.setStackFromBottom(true);
 
-        opc.setOnClickListener(new View.OnClickListener() {
+        listViewChatMessages.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                opc.smoothScrollToPosition(opc.getCount() - 1);
+                listViewChatMessages.smoothScrollToPosition(listViewChatMessages.getCount() - 1);
             }
         });
     }
@@ -153,7 +150,6 @@ public class MainActivity extends AppCompatActivity {
                 return (true);
             case R.id.reset:
                 Toast.makeText(this, "Reset menu", Toast.LENGTH_LONG).show();
-
                 return (true);
             case R.id.about:
                 Toast.makeText(this, "About menu", Toast.LENGTH_LONG).show();
@@ -161,7 +157,6 @@ public class MainActivity extends AppCompatActivity {
             case R.id.exit:
                 finish();
                 return (true);
-
         }
         return (super.onOptionsItemSelected(item));
     }
@@ -173,15 +168,18 @@ public class MainActivity extends AppCompatActivity {
             switch (requestCode) {
                 case REQ_CODE_SPEECH_INPUT:
                     if (data != null) {
+
                         ArrayList<String> result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
                         Iterator i = result.iterator();
                         String s = "";
-                        while (i.hasNext()) {
+
+                        while (i.hasNext())
                             s = (String) i.next();
-                        }
-                        PackData packData = new PackData(nombre, KeyWordSystem.Text_Only,  s);
+
+
+                        PackData packData = new PackData(userName, KeyWordSystem.Text_Only,  s);
                         packData.setPos('E');
-                        men.add(packData);
+                        sentMessages.add(packData);
                         packAdapter.notifyDataSetChanged();
                         bq.add(packData);
                         //mensaje.setText(s);
@@ -195,11 +193,11 @@ public class MainActivity extends AppCompatActivity {
                             final InputStream imageStream = getContentResolver().openInputStream(imageUri);
 
                             byte[] byteArray = readBytes(imageStream);
-                            PackData msj = new PackData(nombre, KeyWordSystem.File_Transfer, "");
+                            PackData msj = new PackData(userName, KeyWordSystem.File_Transfer, "");
                             msj.setPos('E');
                             msj.setContent(byteArray);
 
-                            men.add(msj);
+                            sentMessages.add(msj);
                             packAdapter.notifyDataSetChanged();
                             bq.add(msj);
                             mensaje.getText().clear();
@@ -220,29 +218,29 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onSaveInstanceState(Bundle bundle){
+    protected void onSaveInstanceState(Bundle bundle) {
         super.onSaveInstanceState(bundle);
-        bundle.putString("name",nombre);
+        bundle.putString("name", userName);
     }
 
     @Override
-    protected void onDestroy(){
+    protected void onDestroy() {
         super.onDestroy();
         if (clientConnection!=null){
-            bq.add(new PackData(nombre, KeyWordSystem.Close_Connection, KeyWordSystem.Close_Connection));
+            bq.add(new PackData(userName, KeyWordSystem.Close_Connection, KeyWordSystem.Close_Connection));
         }
         finish();
     }
 
-    public void handleAction(View view){
-        if (!isEmpty(mensaje)){
-            PackData packData = new PackData(nombre, KeyWordSystem.Text_Only,  mensaje.getText().toString());
+    public void handleAction(View view) {
+        if (!isEmpty(mensaje)) {
+            PackData packData = new PackData(userName, KeyWordSystem.Text_Only,  mensaje.getText().toString());
             packData.setPos('E');
-            men.add(packData);
+            sentMessages.add(packData);
             packAdapter.notifyDataSetChanged();
             bq.add(packData);
             mensaje.getText().clear();
-        }else{
+        }else {
             promptSpeechInput();
         }
     }
@@ -269,9 +267,9 @@ public class MainActivity extends AppCompatActivity {
     public void handleSendImage(Intent intent) {
         Uri imageUri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
         if (imageUri != null) {
-            PackData msj = new PackData(nombre, KeyWordSystem.File_Transfer, ":"+imageUri.getPath());
+            PackData msj = new PackData(userName, KeyWordSystem.File_Transfer, ":"+imageUri.getPath());
             msj.setPos('E');
-            men.add(msj);
+            sentMessages.add(msj);
             packAdapter.notifyDataSetChanged();
 
         }
@@ -279,10 +277,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public byte[] readBytes(InputStream stream) throws IOException {
-        if (stream == null) return new byte[]{};
+
+        if (stream == null)
+            return new byte[]{};
+
         byte[] buffer = new byte[1024];
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         boolean error = false;
+
         try {
             int numRead = 0;
             while ((numRead = stream.read(buffer)) > -1) {
@@ -298,12 +300,12 @@ public class MainActivity extends AppCompatActivity {
             try {
                 stream.close();
             } catch (IOException e) {
-                if (!error) throw e;
+                if (!error)
+                    throw e;
             }
         }
         output.flush();
         return output.toByteArray();
-
     }
 
     /**
@@ -326,7 +328,6 @@ public class MainActivity extends AppCompatActivity {
             );
         }
     }
-
 
     class PackAdapter extends ArrayAdapter<PackData> {
         ArrayList<PackData> data;
@@ -367,22 +368,17 @@ public class MainActivity extends AppCompatActivity {
                     ImageView imageView = item.findViewById(R.id.imageOther);
                     imageView.setImageBitmap(bmp);
                 }
-
-
             }
             return (item);
-
         }
-
     }
 
     private boolean isEmpty(EditText etText) {
         return etText.getText().toString().trim().length() == 0;
     }
 
-
     public void addNewMsg(PackData mensaje) {
-        men.add(mensaje);
+        sentMessages.add(mensaje);
         packAdapter.notifyDataSetChanged();
     }
 
@@ -390,10 +386,7 @@ public class MainActivity extends AppCompatActivity {
         return bq;
     }
 
-
-    public String getNombre() {
-        return nombre;
+    public String getUserName() {
+        return userName;
     }
-
-
 }
