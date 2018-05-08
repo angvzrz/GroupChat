@@ -129,6 +129,13 @@ public class MainActivity extends AppCompatActivity {
 
         opc.setTranscriptMode(ListView.TRANSCRIPT_MODE_NORMAL);
         opc.setStackFromBottom(true);
+
+        opc.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                opc.smoothScrollToPosition(opc.getCount() - 1);
+            }
+        });
     }
 
     @Override
