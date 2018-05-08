@@ -19,11 +19,11 @@ import java.net.URISyntaxException;
 public class ClientSender extends AsyncTask<PackData, PackData, PackData> {
 
     private MainActivity main;
-    private DataOutputStream outputStream;
+    private ObjectOutputStream outputStream;
     private boolean statusConnection;
 
-    public ClientSender(DataOutputStream outputStream, MainActivity main) {
-        this.outputStream=outputStream;
+    public ClientSender(ObjectOutputStream outputStream, MainActivity main) {
+        this.outputStream = outputStream;
         this.main = main;
 
     }
@@ -39,7 +39,8 @@ public class ClientSender extends AsyncTask<PackData, PackData, PackData> {
     protected void onPreExecute() {
         try {
 
-            outputStream.writeUTF(main.getNombre()+" "+KeyWordSystem.UserConnected);
+            //outputStream.writeUTF(main.getNombre()+" "+KeyWordSystem.UserConnected);
+            outputStream.writeObject(new PackData(main.getNombre(), KeyWordSystem.UserConnected, KeyWordSystem.UserConnected));
             this.statusConnection = true;
         } catch (IOException e) {
             e.printStackTrace();
@@ -56,15 +57,16 @@ public class ClientSender extends AsyncTask<PackData, PackData, PackData> {
                 PackData message = main.getBq().take();
                 //main.bq.peek();
 
-                if (!message.getType().equals(KeyWordSystem.File_Transfer)) {
+               /* if (!message.getType().equals(KeyWordSystem.File_Transfer)) {
                     outputStream.writeUTF(message.getFrom()+" " +message.getText());
                 } else {
                     Log.e(KeyWordSystem.File_Transfer, "Prepared");
                     sendBytes(message.getContent());
                     Log.e(KeyWordSystem.File_Transfer, message.toString());
-                }
+                }*/
+                outputStream.writeObject(message);
 
-            } catch (InterruptedException  | IOException e) {
+            } catch (InterruptedException | IOException e) {
                 e.printStackTrace();
                 statusConnection = false;
             }
@@ -117,11 +119,11 @@ public class ClientSender extends AsyncTask<PackData, PackData, PackData> {
 
     }
 
-    public void sendBytes( byte[] myByteArray) throws IOException {
-        sendBytes( myByteArray, 0, myByteArray.length);
+    public void sendBytes(byte[] myByteArray) throws IOException {
+        sendBytes(myByteArray, 0, myByteArray.length);
     }
 
-    public void sendBytes( byte[] myByteArray, int start, int len) throws IOException {
+    public void sendBytes(byte[] myByteArray, int start, int len) throws IOException {
         if (len < 0)
             throw new IllegalArgumentException("Negative length not allowed");
         if (start < 0 || start >= myByteArray.length)

@@ -23,11 +23,11 @@ import java.util.Date;
 public class ClientReceiver extends AsyncTask<PackData, PackData, Void> {
 
     private MainActivity main;
-    private DataInputStream inputStream;
+    private ObjectInputStream inputStream;
     private boolean statusConnection;
     private byte[] bitmapdata;
 
-    ClientReceiver(DataInputStream inputStream, MainActivity main) {
+    ClientReceiver(ObjectInputStream inputStream, MainActivity main) {
         this.inputStream = inputStream;
         this.main = main;
         this.statusConnection = true;
@@ -61,8 +61,9 @@ public class ClientReceiver extends AsyncTask<PackData, PackData, Void> {
         while (statusConnection) {
             try {
                 Log.e("Recepcion", "esperando mensaje de entrada" + inputStream.available());
-                String response=inputStream.readUTF();
-
+                packData= (PackData) inputStream.readObject();
+               // String response=inputStream.readUTF();
+                /*
                 if (response.contains(KeyWordSystem.File_Transfer)){
                     String[] split=response.split(" ");
                     Log.d(KeyWordSystem.File_Transfer, "?");
@@ -77,8 +78,8 @@ public class ClientReceiver extends AsyncTask<PackData, PackData, Void> {
 
                 }else{
                     String[] split = response.split(":");
-                    packData = new PackData(split[0],KeyWordSystem.Only_Text,split[1]);
-                }
+                    packData = new PackData(split[0],KeyWordSystem.Text_Only,split[1]);
+                }*/
                 /*if (packData.getType().equals(KeyWordSystem.File_Transfer)) {
                    /* bitmapdata = readBytes();
                     Bitmap bitmap = BitmapFactory.decodeByteArray(bitmapdata, 0, bitmapdata.length);
@@ -92,6 +93,8 @@ public class ClientReceiver extends AsyncTask<PackData, PackData, Void> {
             } catch (IOException e) {
                 e.printStackTrace();
                 statusConnection = false;
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
             }
         }
         return null;

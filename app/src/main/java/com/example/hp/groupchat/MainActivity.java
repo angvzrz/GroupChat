@@ -99,18 +99,18 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        PackData packData = new PackData(nombre, KeyWordSystem.Only_Text, "Este es un mensaje de alguien mas");
+        PackData packData = new PackData("Other", KeyWordSystem.Text_Only, "Este es un mensaje de alguien mas");
         packData.setPos('R');
         men.add(packData);
 
-        men.add(new PackData(nombre, KeyWordSystem.Only_Text, "Este es un mensaje mio"));
+        men.add(new PackData(nombre, KeyWordSystem.Text_Only, "Este es un mensaje mio"));
 
 
         packAdapter = new PackAdapter(this, men);
         final ListView opc = findViewById(R.id.opc);
         opc.setAdapter(packAdapter);
-        //clientConnection = new ClientConnection("187.213.202.80", 10001, this);
-        clientConnection=new ClientConnection("192.168.1.65",10001,this);
+        clientConnection = new ClientConnection("187.213.202.80", 10001, this);
+        //clientConnection=new ClientConnection("192.168.0.21",10001,this);
         clientConnection.execute(new PackData(nombre, KeyWordSystem.Connected, nombre));
 
         verifyStoragePermissions(this);
@@ -170,7 +170,7 @@ public class MainActivity extends AppCompatActivity {
                         while (i.hasNext()) {
                             s = (String) i.next();
                         }
-                        PackData packData = new PackData(nombre, KeyWordSystem.Only_Text, ":" + s);
+                        PackData packData = new PackData(nombre, KeyWordSystem.Text_Only,  s);
                         packData.setPos('E');
                         men.add(packData);
                         packAdapter.notifyDataSetChanged();
@@ -227,7 +227,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void handleAction(View view){
         if (!isEmpty(mensaje)){
-            PackData packData = new PackData(nombre, KeyWordSystem.Only_Text, ":" + mensaje.getText().toString());
+            PackData packData = new PackData(nombre, KeyWordSystem.Text_Only,  mensaje.getText().toString());
             packData.setPos('E');
             men.add(packData);
             packAdapter.notifyDataSetChanged();

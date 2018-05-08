@@ -22,8 +22,8 @@ public class ClientConnection extends AsyncTask<PackData, PackData, PackData> {
     private int PUERTO;
     private MainActivity main;
     private Socket socket;
-    private DataInputStream inputStream;
-    private DataOutputStream outputStream;
+    private ObjectInputStream inputStream;
+    private ObjectOutputStream outputStream;
     private ClientReceiver clientReceiver;
     private ClientSender clientSender;
     private boolean statusConnection;
@@ -49,16 +49,19 @@ public class ClientConnection extends AsyncTask<PackData, PackData, PackData> {
         PackData conexion = null;
         try {
             socket = new Socket(HOST, PUERTO);
-            outputStream = new DataOutputStream(socket.getOutputStream());
-             inputStream= new DataInputStream(socket.getInputStream());
+            outputStream = new ObjectOutputStream(socket.getOutputStream());
+            inputStream = new ObjectInputStream(socket.getInputStream());
 
-            outputStream.writeUTF(params[0].getFrom());
-            String response=inputStream.readUTF();
-            conexion = new PackData(KeyWordSystem._Bot,KeyWordSystem.Only_Text,response);
+            outputStream.writeObject(params[0]);
+            //String response = inputStream.readObject();
+           // conexion = new PackData(KeyWordSystem._Bot, KeyWordSystem.Text_Only, response);
+            conexion= (PackData) inputStream.readObject();
             publishProgress(conexion);
             statusConnection = true;
 
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
         return conexion;
@@ -68,15 +71,13 @@ public class ClientConnection extends AsyncTask<PackData, PackData, PackData> {
     protected void onPostExecute(PackData s) {
         Log.e("Conectando paquetes", "Ready");
         clientReceiver = new ClientReceiver(inputStream, main);
-        clientReceiver.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, new PackData(main.getNombre(), KeyWordSystem.Only_Text,"Ok"));
+        clientReceiver.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, new PackData(main.getNombre(), KeyWordSystem.Text_Only, "Ok"));
 
         clientSender = new ClientSender(outputStream, main);
-        clientSender.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, new PackData(main.getNombre(),KeyWordSystem.Only_Text,"Ok"));
+        clientSender.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, new PackData(main.getNombre(), KeyWordSystem.Text_Only, "Ok"));
 
 
     }
-
-
 
 
 }
