@@ -21,6 +21,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -108,8 +109,8 @@ public class MainActivity extends AppCompatActivity {
         packAdapter = new PackAdapter(this, sentMessages);
         final ListView listViewChatMessages = findViewById(R.id.lv_chat_messages_main);
         listViewChatMessages.setAdapter(packAdapter);
-        clientConnection = new ClientConnection("187.213.202.80", 10001, this);
-        //clientConnection=new ClientConnection("192.168.0.21",10001,this);
+        //clientConnection = new ClientConnection("187.213.202.80", 10001, this);
+        clientConnection=new ClientConnection("192.168.0.8",10001,this);
         clientConnection.execute(new PackData(userName, KeyWordSystem.Connected, userName));
 
         verifyStoragePermissions(this);
@@ -127,10 +128,11 @@ public class MainActivity extends AppCompatActivity {
         listViewChatMessages.setTranscriptMode(ListView.TRANSCRIPT_MODE_NORMAL);
         listViewChatMessages.setStackFromBottom(true);
 
-        listViewChatMessages.setOnClickListener(new View.OnClickListener() {
+        listViewChatMessages.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onClick(View v) {
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 listViewChatMessages.smoothScrollToPosition(listViewChatMessages.getCount() - 1);
+
             }
         });
     }
