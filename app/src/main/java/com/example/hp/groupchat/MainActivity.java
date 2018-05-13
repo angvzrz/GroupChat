@@ -8,6 +8,8 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
@@ -16,6 +18,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -108,7 +111,9 @@ public class MainActivity extends AppCompatActivity {
 
         packAdapter = new PackAdapter(this, sentMessages);
         final ListView listViewChatMessages = findViewById(R.id.lv_chat_messages_main);
+
         listViewChatMessages.setAdapter(packAdapter);
+
         //clientConnection = new ClientConnection("187.213.202.80", 10001, this);
         clientConnection=new ClientConnection("192.168.0.8",10001,this);
         clientConnection.execute(new PackData(userName, KeyWordSystem.Connected, userName));
@@ -342,7 +347,7 @@ public class MainActivity extends AppCompatActivity {
         public View getView(final int position, View convertView, ViewGroup parent) {
             LayoutInflater inflater = LayoutInflater.from(getContext());
             View item = inflater.inflate(R.layout.list, null);
-            PackData packData = data.get(position);
+            final PackData packData = data.get(position);
             if (packData.getPos() == 'E') {
                 LinearLayout send = item.findViewById(R.id.layoutRecibo);
                 send.setVisibility(View.GONE);
@@ -350,10 +355,11 @@ public class MainActivity extends AppCompatActivity {
                 String txt = packData.getTime() + " - " + packData.getFrom() + ": " + packData.getText();
                 env.setText(txt);
                 if (packData.getType().equals(KeyWordSystem.File_Transfer)) {
-                    ImageView imageView = item.findViewById(R.id.imageMe);
                     InputStream is = new ByteArrayInputStream(packData.getContent());
-                    Bitmap bmp = BitmapFactory.decodeStream(is);
-                    imageView.setImageBitmap(bmp);
+
+                    Drawable drawable=new BitmapDrawable(this.getContext().getResources(), BitmapFactory.decodeStream(is));
+                    drawable.setBounds(0,0,60,60);
+                    env.setCompoundDrawables( drawable, null, null, null );
                 }
 
             } else {
@@ -366,11 +372,23 @@ public class MainActivity extends AppCompatActivity {
                 if (packData.getType().equals(KeyWordSystem.File_Transfer)) {
 
                     InputStream is = new ByteArrayInputStream(packData.getContent());
-                    Bitmap bmp = BitmapFactory.decodeStream(is);
-                    ImageView imageView = item.findViewById(R.id.imageOther);
-                    imageView.setImageBitmap(bmp);
+
+                    Drawable drawable=new BitmapDrawable(this.getContext().getResources(), BitmapFactory.decodeStream(is));
+                    drawable.setBounds(0,0,60,60);
+                    env.setCompoundDrawables(  null, drawable, null, null );
+
                 }
             }
+            item.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (packData.getType().equals(KeyWordSystem.File_Transfer)){
+                        Intent intent=new Intent(MainActivity.this,DisplayActivity.class);
+                        intent.putExtra("msg",packData);
+                        startActivity(intent);
+                    }
+                }
+            });
             return (item);
         }
     }
@@ -391,4 +409,6 @@ public class MainActivity extends AppCompatActivity {
     public String getUserName() {
         return userName;
     }
+
+
 }
