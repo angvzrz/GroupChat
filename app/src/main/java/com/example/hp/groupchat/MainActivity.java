@@ -11,7 +11,9 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.speech.RecognizerIntent;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -108,6 +110,8 @@ public class MainActivity extends AppCompatActivity {
         sentMessages.add(packData);
         sentMessages.add(new PackData(userName, KeyWordSystem.Text_Only, "Este es un mensaje mio"));
 
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
 
         packAdapter = new PackAdapter(this, sentMessages);
         final ListView listViewChatMessages = findViewById(R.id.lv_chat_messages_main);
@@ -116,7 +120,7 @@ public class MainActivity extends AppCompatActivity {
 
         //clientConnection = new ClientConnection("187.213.202.80", 10001, this);
         clientConnection=new ClientConnection("192.168.0.8",10001,this);
-        clientConnection.execute(new PackData(userName, KeyWordSystem.Connected, userName));
+        clientConnection.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, new PackData(userName, KeyWordSystem.Connected, userName));
 
         verifyStoragePermissions(this);
         // Get intent, action and MIME type
