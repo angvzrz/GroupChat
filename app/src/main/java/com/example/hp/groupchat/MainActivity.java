@@ -118,8 +118,7 @@ public class MainActivity extends AppCompatActivity {
 
         listViewChatMessages.setAdapter(packAdapter);
 
-        //clientConnection = new ClientConnection("187.213.202.80", 10001, this);
-        clientConnection=new ClientConnection("192.168.0.8",10001,this);
+        clientConnection = new ClientConnection("187.213.202.80", 10001, this);
         clientConnection.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, new PackData(userName, KeyWordSystem.Connected, userName));
 
         verifyStoragePermissions(this);
