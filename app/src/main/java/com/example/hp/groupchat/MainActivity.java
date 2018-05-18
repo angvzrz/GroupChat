@@ -97,7 +97,6 @@ public class MainActivity extends AppCompatActivity {
 
                 if (isEmpty(mensaje)) {
                     enviar.setImageResource(android.R.drawable.ic_btn_speak_now);
-                    mensaje.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
                 }
                 else {
                     enviar.setImageResource(android.R.drawable.ic_menu_send);

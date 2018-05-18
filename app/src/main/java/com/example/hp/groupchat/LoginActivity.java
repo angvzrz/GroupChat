@@ -18,25 +18,6 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         user =  findViewById(R.id.namelbl);
-        user.addTextChangedListener(new TextWatcher() {
-
-            @Override
-            public void afterTextChanged(Editable s) {
-            }
-
-            @Override
-            public void beforeTextChanged(CharSequence s, int start,
-                                          int count, int after) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start,
-                                      int before, int count) {
-                if(isEmpty(user)){
-                    user.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
-                }
-            }
-        });
     }
     public void onClick(View v) {
 
@@ -55,9 +36,5 @@ public class LoginActivity extends AppCompatActivity {
             //Iniciamos la nueva actividad
             startActivity(intent);
         }
-    }
-
-    private boolean isEmpty(EditText etText) {
-        return etText.getText().toString().trim().length() == 0;
     }
 }
