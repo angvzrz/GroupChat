@@ -22,7 +22,7 @@ public class PackData implements Serializable {
     private int size;
     private byte[] content;
     private final String time;
-    private char pos;
+    private char position;
 
     public PackData(String from, String type, String text) {
 
@@ -30,7 +30,7 @@ public class PackData implements Serializable {
         this.from = from;
         this.type = type;
         this.text = text;
-        this.pos = 'E';
+        this.position = 'E';
     }
 
     public String getFrom() {
@@ -50,7 +50,6 @@ public class PackData implements Serializable {
     }
 
 
-
     public byte[] getContent() {
         return content;
     }
@@ -59,6 +58,9 @@ public class PackData implements Serializable {
         this.file_name = file_name;
     }
 
+    public void setType (String type) {
+        this.type = type;
+    }
 
     public void setContent(byte[] content) {
         this.content = content;
@@ -76,12 +78,12 @@ public class PackData implements Serializable {
         return time;
     }
 
-    public char getPos() {
-        return pos;
+    public char getPosition() {
+        return position;
     }
 
-    public void setPos(char pos) {
-        this.pos = pos;
+    public void setPosition(char position) {
+        this.position = position;
     }
 
     public int getWidth() {
@@ -121,7 +123,7 @@ public class PackData implements Serializable {
         hash = 79 * hash + this.size;
         hash = 79 * hash + Arrays.hashCode(this.content);
         hash = 79 * hash + Objects.hashCode(this.time);
-        hash = 79 * hash + this.pos;
+        hash = 79 * hash + this.position;
         return hash;
     }
 
@@ -149,7 +151,7 @@ public class PackData implements Serializable {
 
     @Override
     public String toString() {
-        return String.format("%s - %s; %s %s", time, from, type, text); //To change body of generated methods, choose Tools | Templates.
+        //To change body of generated methods, choose Tools | Templates.
+        return String.format("%s - %s; %s %s", time, from, type, text);
     }
-
 }

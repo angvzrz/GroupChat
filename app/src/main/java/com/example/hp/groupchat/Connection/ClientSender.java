@@ -51,7 +51,7 @@ public class ClientSender extends AsyncTask<PackData, PackData, PackData> {
         Log.e("Status connection", "TRUE");
         while (statusConnection) {
             try {
-                PackData message = main.getBq().take();
+                PackData message = main.getBlockingQueue().take();
                 //main.bq.peek();
 
                /* if (!message.getType().equals(KeyWordSystem.File_Transfer)) {

@@ -1,24 +1,17 @@
 package com.example.hp.groupchat.Connection;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
-import android.provider.MediaStore;
 import android.util.Log;
 
 import com.example.hp.groupchat.shared.KeyWordSystem;
 import com.example.hp.groupchat.MainActivity;
 import com.example.hp.groupchat.shared.PackData;
 
-import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.OutputStream;
-import java.net.Socket;
-import java.util.Date;
 
 public class ClientReceiver extends AsyncTask<PackData, PackData, Void> {
 
@@ -39,7 +32,7 @@ public class ClientReceiver extends AsyncTask<PackData, PackData, Void> {
 
         //MainActivity.Mensaje mensaje = new MainActivity.Mensaje( values[0], 'R');
         PackData msg = values[0];
-        msg.setPos('R');
+        msg.setPosition('R');
         main.addNewMsg(msg);
     }
 

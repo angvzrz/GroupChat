@@ -34,7 +34,7 @@ public class ClientConnection extends AsyncTask<PackData, PackData, PackData> {
     protected void onProgressUpdate(PackData... values) {
 
         PackData mensaje = values[0];
-        mensaje.setPos('R');
+        mensaje.setPosition('R');
         main.addNewMsg(mensaje);
 
     }

@@ -6,7 +6,6 @@ import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -16,11 +15,11 @@ import android.os.Bundle;
 import android.os.StrictMode;
 import android.speech.RecognizerIntent;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
-import android.text.InputType;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -30,7 +29,6 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -50,14 +48,19 @@ import java.util.Iterator;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class MainActivity extends AppCompatActivity {
-    private LinkedBlockingQueue<PackData> bq;
+
+    private LinkedBlockingQueue<PackData> blockingQueue;
     private ArrayList<PackData> sentMessages;
+
     private PackAdapter packAdapter;
     private String userName;
     private ImageButton enviar;
     private EditText mensaje;
     private ClientConnection clientConnection;
     private MainActivity main;
+
+    private RecyclerView messagesList;
+    private SwipeRefreshLayout refreshLayout;
 
     public static final int PICK_IMAGE = 182;
     private static final int REQ_CODE_SPEECH_INPUT = 101;
@@ -72,6 +75,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         Bundle bundle = this.getIntent().getExtras();
         //Construimos el mensaje a mostrar
         userName = bundle.getString("name");
@@ -80,7 +84,10 @@ public class MainActivity extends AppCompatActivity {
         mensaje = findViewById(R.id.gentxt);
         sentMessages = new ArrayList<>();
         main = this;
-        bq = new LinkedBlockingQueue();
+        blockingQueue = new LinkedBlockingQueue();
+
+        messagesList = (RecyclerView) findViewById(R.id.messages_list);
+        refreshLayout = (SwipeRefreshLayout) findViewById(R.id.message_swipe_layout);
 
         mensaje.addTextChangedListener(new TextWatcher() {
 
@@ -105,7 +112,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         PackData packData = new PackData("Other", KeyWordSystem.Text_Only, "Este es un mensaje de alguien mas");
-        packData.setPos('R');
+        packData.setPosition('R');
         sentMessages.add(packData);
         sentMessages.add(new PackData(userName, KeyWordSystem.Text_Only, "Este es un mensaje mio"));
 
@@ -185,12 +192,11 @@ public class MainActivity extends AppCompatActivity {
                         while (i.hasNext())
                             s = (String) i.next();
 
-
                         PackData packData = new PackData(userName, KeyWordSystem.Text_Only,  s);
-                        packData.setPos('E');
+                        packData.setPosition('E');
                         sentMessages.add(packData);
                         packAdapter.notifyDataSetChanged();
-                        bq.add(packData);
+                        blockingQueue.add(packData);
                         //mensaje.setText(s);
                     }
                     break;
@@ -203,12 +209,12 @@ public class MainActivity extends AppCompatActivity {
 
                             byte[] byteArray = readBytes(imageStream);
                             PackData msj = new PackData(userName, KeyWordSystem.File_Transfer, "");
-                            msj.setPos('E');
+                            msj.setPosition('E');
                             msj.setContent(byteArray);
 
                             sentMessages.add(msj);
                             packAdapter.notifyDataSetChanged();
-                            bq.add(msj);
+                            blockingQueue.add(msj);
                             mensaje.getText().clear();
 
                         } catch (FileNotFoundException e) {
@@ -217,7 +223,8 @@ public class MainActivity extends AppCompatActivity {
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
-                    } else {
+                    }
+                    else {
                         //showing toast when unable to capture the image
                         Toast.makeText(main, "Unable to upload Image Please Try again ...", Toast.LENGTH_SHORT).show();
                     }
@@ -235,21 +242,23 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (clientConnection!=null){
-            bq.add(new PackData(userName, KeyWordSystem.Close_Connection, KeyWordSystem.Close_Connection));
-        }
+
+        if (clientConnection!=null)
+            blockingQueue.add(new PackData(userName, KeyWordSystem.Close_Connection, KeyWordSystem.Close_Connection));
+
         finish();
     }
 
     public void handleAction(View view) {
         if (!isEmpty(mensaje)) {
             PackData packData = new PackData(userName, KeyWordSystem.Text_Only,  mensaje.getText().toString());
-            packData.setPos('E');
+            packData.setPosition('E');
             sentMessages.add(packData);
             packAdapter.notifyDataSetChanged();
-            bq.add(packData);
+            blockingQueue.add(packData);
             mensaje.getText().clear();
-        }else {
+        }
+        else {
             promptSpeechInput();
         }
     }
@@ -277,12 +286,11 @@ public class MainActivity extends AppCompatActivity {
         Uri imageUri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
         if (imageUri != null) {
             PackData msj = new PackData(userName, KeyWordSystem.File_Transfer, ":"+imageUri.getPath());
-            msj.setPos('E');
+            msj.setPosition('E');
             sentMessages.add(msj);
             packAdapter.notifyDataSetChanged();
 
         }
-
     }
 
     public byte[] readBytes(InputStream stream) throws IOException {
@@ -347,16 +355,20 @@ public class MainActivity extends AppCompatActivity {
         }
 
         public View getView(final int position, View convertView, ViewGroup parent) {
+
             LayoutInflater inflater = LayoutInflater.from(getContext());
             View item = inflater.inflate(R.layout.list, null);
             final PackData packData = data.get(position);
-            if (packData.getPos() == 'E') {
+
+            if (packData.getPosition() == 'E') {
                 LinearLayout send = item.findViewById(R.id.layoutRecibo);
                 send.setVisibility(View.GONE);
                 TextView env = item.findViewById(R.id.textViewEnvio);
                 String txt = packData.getTime() + " - " + packData.getFrom() + ": " + packData.getText();
                 env.setText(txt);
+
                 if (packData.getType().equals(KeyWordSystem.File_Transfer)) {
+
                     InputStream is = new ByteArrayInputStream(packData.getContent());
 
                     Drawable drawable=new BitmapDrawable(this.getContext().getResources(), BitmapFactory.decodeStream(is));
@@ -364,7 +376,8 @@ public class MainActivity extends AppCompatActivity {
                     env.setCompoundDrawables( drawable, null, null, null );
                 }
 
-            } else {
+            }
+            else {
                 LinearLayout receiver = item.findViewById(R.id.layoutEnvio);
                 receiver.setVisibility(View.GONE);
                 TextView env = item.findViewById(R.id.textViewRecibido);
@@ -384,7 +397,7 @@ public class MainActivity extends AppCompatActivity {
             item.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    if (packData.getType().equals(KeyWordSystem.File_Transfer)){
+                    if (packData.getType().equals(KeyWordSystem.File_Transfer)) {
                         Intent intent=new Intent(MainActivity.this,DisplayActivity.class);
                         intent.putExtra("msg",packData);
                         startActivity(intent);
@@ -404,8 +417,8 @@ public class MainActivity extends AppCompatActivity {
         packAdapter.notifyDataSetChanged();
     }
 
-    public LinkedBlockingQueue<PackData> getBq() {
-        return bq;
+    public LinkedBlockingQueue<PackData> getBlockingQueue() {
+        return blockingQueue;
     }
 
     public String getUserName() {

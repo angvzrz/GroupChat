@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:id="@+id/layoutEnvio"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:orientation="vertical">
+
+    <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/layout1"
+            android:layout_marginTop="20dp"
+            android:orientation="horizontal"
+            android:layout_gravity="right">
+
+        <ImageView
+                android:id="@+id/message_sent_img"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:layout_marginLeft="25dp"
+                android:layout_weight="6"
+                android:padding="0dp"
+                android:scaleType="centerCrop"/>
+
+        <TextView
+                android:id="@+id/textViewEnvio"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="25dp"
+                android:layout_weight="6"
+                android:background="@drawable/rounded_corner1"
+                android:padding="16dp"
+                android:text="Envio"
+                android:textColor="#000"
+                android:layout_marginLeft="25dp"
+                android:textAlignment="textEnd"/>
+
+    </LinearLayout>
+
+</LinearLayout>
