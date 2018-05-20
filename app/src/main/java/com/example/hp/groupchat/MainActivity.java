@@ -17,12 +17,14 @@ import android.speech.RecognizerIntent;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -60,7 +62,8 @@ public class MainActivity extends AppCompatActivity {
     private MainActivity main;
 
     private RecyclerView messagesList;
-    private SwipeRefreshLayout refreshLayout;
+    private RecyclerView.Adapter mAdapter;
+    private RecyclerView.LayoutManager mLayoutManager;
 
     public static final int PICK_IMAGE = 182;
     private static final int REQ_CODE_SPEECH_INPUT = 101;
@@ -84,10 +87,23 @@ public class MainActivity extends AppCompatActivity {
         mensaje = findViewById(R.id.gentxt);
         sentMessages = new ArrayList<>();
         main = this;
-        blockingQueue = new LinkedBlockingQueue();
+        blockingQueue = new LinkedBlockingQueue<>();
 
-        messagesList = (RecyclerView) findViewById(R.id.messages_list);
-        refreshLayout = (SwipeRefreshLayout) findViewById(R.id.message_swipe_layout);
+        messagesList =  findViewById(R.id.my_recycler_view);
+        messagesList.setHasFixedSize(true);
+        //refreshLayout = (SwipeRefreshLayout) findViewById(R.id.message_swipe_layout);
+        // use this setting to improve performance if you know that changes
+        // in content do not change the layout size of the RecyclerView
+//
+
+        // use a linear layout manager
+        mLayoutManager = new LinearLayoutManager(this);
+        messagesList.setLayoutManager(mLayoutManager);
+
+
+        // specify an adapter (see also next example)
+        mAdapter = new MessageAdapter(getApplicationContext(),sentMessages,new MyOnClickListener(getApplicationContext(),messagesList,sentMessages));
+        messagesList.setAdapter(mAdapter);
 
         mensaje.addTextChangedListener(new TextWatcher() {
 
@@ -119,12 +135,15 @@ public class MainActivity extends AppCompatActivity {
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
 
-        packAdapter = new PackAdapter(this, sentMessages);
+        /*packAdapter = new PackAdapter(this, sentMessages);
         final ListView listViewChatMessages = findViewById(R.id.lv_chat_messages_main);
 
-        listViewChatMessages.setAdapter(packAdapter);
+        listViewChatMessages.setAdapter(packAdapter);*/
 
         clientConnection = new ClientConnection("187.213.202.80", 10001, this);
+       // clientConnection = new ClientConnection("192.168.0.21", 10001, this);
+
+
         clientConnection.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, new PackData(userName, KeyWordSystem.Connected, userName));
 
         verifyStoragePermissions(this);
@@ -139,7 +158,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        listViewChatMessages.setTranscriptMode(ListView.TRANSCRIPT_MODE_NORMAL);
+       /* listViewChatMessages.setTranscriptMode(ListView.TRANSCRIPT_MODE_NORMAL);
         listViewChatMessages.setStackFromBottom(true);
 
         listViewChatMessages.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -148,7 +167,7 @@ public class MainActivity extends AppCompatActivity {
                 listViewChatMessages.smoothScrollToPosition(listViewChatMessages.getCount() - 1);
 
             }
-        });
+        });*/
     }
 
     @Override
@@ -213,7 +232,7 @@ public class MainActivity extends AppCompatActivity {
                             msj.setContent(byteArray);
 
                             sentMessages.add(msj);
-                            packAdapter.notifyDataSetChanged();
+                            mAdapter.notifyDataSetChanged();
                             blockingQueue.add(msj);
                             mensaje.getText().clear();
 
@@ -254,7 +273,7 @@ public class MainActivity extends AppCompatActivity {
             PackData packData = new PackData(userName, KeyWordSystem.Text_Only,  mensaje.getText().toString());
             packData.setPosition('E');
             sentMessages.add(packData);
-            packAdapter.notifyDataSetChanged();
+            mAdapter.notifyDataSetChanged();
             blockingQueue.add(packData);
             mensaje.getText().clear();
         }
@@ -414,7 +433,8 @@ public class MainActivity extends AppCompatActivity {
 
     public void addNewMsg(PackData mensaje) {
         sentMessages.add(mensaje);
-        packAdapter.notifyDataSetChanged();
+        //packAdapter.notifyDataSetChanged();
+        mAdapter.notifyDataSetChanged();
     }
 
     public LinkedBlockingQueue<PackData> getBlockingQueue() {
