@@ -14,6 +14,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.speech.RecognizerIntent;
+import android.speech.SpeechRecognizer;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
@@ -21,6 +22,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -168,6 +170,7 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });*/
+        Log.e("Speech","is available: "+ SpeechRecognizer.isRecognitionAvailable(this));
     }
 
     @Override
@@ -214,7 +217,7 @@ public class MainActivity extends AppCompatActivity {
                         PackData packData = new PackData(userName, KeyWordSystem.Text_Only,  s);
                         packData.setPosition('E');
                         sentMessages.add(packData);
-                        packAdapter.notifyDataSetChanged();
+                        mAdapter.notifyDataSetChanged();
                         blockingQueue.add(packData);
                         //mensaje.setText(s);
                     }
@@ -290,12 +293,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void promptSpeechInput() {
-        Intent intentvoice = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+
+        intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, getClass().getPackage().getName());
+
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+
+        //intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
+
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "es-MX");
+
+       /* Intent intentvoice = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         intentvoice.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         intentvoice.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "es");
-        intentvoice.putExtra(RecognizerIntent.EXTRA_PROMPT, getString(R.string.speech_prompt));
+        intentvoice.putExtra(RecognizerIntent.EXTRA_PROMPT, getString(R.string.speech_prompt));*/
         try {
-            startActivityForResult(intentvoice, REQ_CODE_SPEECH_INPUT);
+            startActivityForResult(intent, REQ_CODE_SPEECH_INPUT);
         } catch (ActivityNotFoundException a) {
             Toast.makeText(getApplicationContext(), getString(R.string.speech_not_supported), Toast.LENGTH_SHORT).show();
         }
