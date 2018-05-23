@@ -16,7 +16,6 @@ import android.os.StrictMode;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -26,15 +25,12 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -142,8 +138,8 @@ public class MainActivity extends AppCompatActivity {
 
         listViewChatMessages.setAdapter(packAdapter);*/
 
-        clientConnection = new ClientConnection("187.213.202.80", 10001, this);
-       // clientConnection = new ClientConnection("192.168.0.21", 10001, this);
+//        clientConnection = new ClientConnection("187.213.202.80", 10001, this);
+        clientConnection = new ClientConnection("192.168.0.5", 10001, this);
 
 
         clientConnection.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, new PackData(userName, KeyWordSystem.Connected, userName));
@@ -393,9 +389,9 @@ public class MainActivity extends AppCompatActivity {
             final PackData packData = data.get(position);
 
             if (packData.getPosition() == 'E') {
-                LinearLayout send = item.findViewById(R.id.layoutRecibo);
+                LinearLayout send = item.findViewById(R.id.msg_layout);
                 send.setVisibility(View.GONE);
-                TextView env = item.findViewById(R.id.textViewEnvio);
+                TextView env = item.findViewById(R.id.msg_text);
                 String txt = packData.getTime() + " - " + packData.getFrom() + ": " + packData.getText();
                 env.setText(txt);
 
@@ -410,9 +406,9 @@ public class MainActivity extends AppCompatActivity {
 
             }
             else {
-                LinearLayout receiver = item.findViewById(R.id.layoutEnvio);
+                LinearLayout receiver = item.findViewById(R.id.msg_layout);
                 receiver.setVisibility(View.GONE);
-                TextView env = item.findViewById(R.id.textViewRecibido);
+                TextView env = item.findViewById(R.id.msg_text);
 
                 String txt = packData.getTime() + " - " + packData.getFrom() + ": " + packData.getText();
                 env.setText(txt);

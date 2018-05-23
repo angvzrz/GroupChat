@@ -37,27 +37,28 @@ public class MessageAdapter extends RecyclerView.Adapter {
         this.messagesList = messagesList;
         this.onClickListener = myOnClickListener;
     }
-
-
+    
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 
         View view;
         if (viewType == VIEW_TYPE_MESSAGE_SENT) {
             view = LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.single_message_sent, parent, false);
-            view.setOnClickListener(onClickListener);
-            return new SentMessageHolder(view);
-        } else {
-            view = LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.single_message_received, parent, false);
+                    .inflate(R.layout.single_message_layout, parent, false);
+            view.setBackground(view.getResources().getDrawable(R.drawable.rounded_corner1, null));
             view.setOnClickListener(onClickListener);
 
-            return new ReceivedMessageHolder(view);
+            return new MessagesViewHolder(view);
         }
+        else {
+            view = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.single_message_layout, parent, false);
+            view.setBackground(view.getResources().getDrawable(R.drawable.rounded_corner, null));
+            view.setOnClickListener(onClickListener);
 
+            return new MessagesViewHolder(view);
+        }
     }
-
 
     @Override
     public int getItemCount() {
@@ -72,72 +73,39 @@ public class MessageAdapter extends RecyclerView.Adapter {
 
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-
         PackData message = messagesList.get(position);
-
-        switch (holder.getItemViewType()) {
-            case VIEW_TYPE_MESSAGE_SENT:
-                ((SentMessageHolder) holder).bind(message);
-                break;
-            case VIEW_TYPE_MESSAGE_RECEIVED:
-                ((ReceivedMessageHolder) holder).bind(message);
-                break;
-        }
+        ((MessagesViewHolder) holder).bind(message);
     }
 
-    private class SentMessageHolder extends RecyclerView.ViewHolder {
+    private class MessagesViewHolder extends  RecyclerView.ViewHolder {
 
-        private TextView messageSentText;
-        private ImageView messageSentImage;
-        SentMessageHolder(View itemView) {
+        private TextView messageText;
+        private ImageView messageImage;
+
+        MessagesViewHolder(View itemView) {
             super(itemView);
-            messageSentText = itemView.findViewById(R.id.textViewEnvio);
-            messageSentImage = itemView.findViewById(R.id.message_sent_img);
-
+            this.messageText = itemView.findViewById(R.id.msg_text);
+            this.messageImage = itemView.findViewById(R.id.msg_img);
         }
 
         void bind(final PackData message) {
-            messageSentText.setText(message.getText());
-            if (message.getType().equals(KeyWordSystem.File_Transfer)) {
-                InputStream is = new ByteArrayInputStream(message.getContent());
-                Drawable drawable = new BitmapDrawable(context.getResources(), BitmapFactory.decodeStream(is));
-                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(100, 100);
-                messageSentImage.setImageDrawable(drawable);
-                messageSentImage.setLayoutParams(params);
-                messageSentText.setVisibility(View.INVISIBLE);
 
+            if (this.getItemViewType() == VIEW_TYPE_MESSAGE_RECEIVED)
+                messageText.setText(message.getFrom() + ": " + message.getText());
+            else if (this.getItemViewType() == VIEW_TYPE_MESSAGE_SENT)
+                messageText.setText(message.getText());
+
+            if (message.getType().equals(KeyWordSystem.File_Transfer)) {
+                InputStream inputStream = new ByteArrayInputStream(message.getContent());
+                Drawable drawable = new BitmapDrawable(context.getResources(), BitmapFactory.decodeStream(inputStream));
+
+                LinearLayout.LayoutParams params = new LinearLayout
+                        .LayoutParams(250, 400);
+
+                messageImage.setImageDrawable(drawable);
+                messageImage.setLayoutParams(params);
+                messageText.setVisibility(View.INVISIBLE);
             }
         }
-
-
     }
-
-    private class ReceivedMessageHolder extends RecyclerView.ViewHolder {
-        private TextView messageReceivedText;
-        private ImageView messageReceivedImage;
-        ReceivedMessageHolder(View view) {
-            super(view);
-            messageReceivedText = view.findViewById(R.id.textViewRecibido);
-            messageReceivedImage = view.findViewById(R.id.message_recv_img);
-        }
-
-        void bind(final PackData message) {
-            String text = message.getFrom() + ": " + message.getText();
-            messageReceivedText.setText(text);
-            if (message.getType().equals(KeyWordSystem.File_Transfer)) {
-                InputStream is = new ByteArrayInputStream(message.getContent());
-                Drawable drawable = new BitmapDrawable(context.getResources(), BitmapFactory.decodeStream(is));
-                // drawable.setBounds(0, 0, 150, 150);
-
-                messageReceivedImage.setImageDrawable(drawable);
-                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(100, 100);
-                messageReceivedImage.setLayoutParams(params);
-                messageReceivedText.setVisibility(View.INVISIBLE);
-
-            }
-        }
-
-    }
-
-
 }
